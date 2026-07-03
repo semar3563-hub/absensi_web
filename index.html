@@ -1380,5 +1380,29 @@ buatDropdownBulanOtomatis();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 1. Panggil library Firebase (menggunakan versi compat agar lebih mudah ditulis) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+  // 2. Konfigurasi Firebase sesuai dengan akun Anda di Screenshot (12).jpg
+  const firebaseConfig = {
+    apiKey: "AIzaSyCe2m39ohm5iGYMA2I-XSF8LMdUnDAKO_Y",
+    authDomain: "fasilitas-sekolah-app.firebaseapp.com",
+    databaseURL: "https://fasilitas-sekolah-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "fasilitas-sekolah-app",
+    storageBucket: "fasilitas-sekolah-app.firebasestorage.app",
+    messagingSenderId: "618741335115",
+    appId: "1:1618741335115:web:241fa02f0c80efc58b39ce",
+    measurementId: "G-43DF6V2MJ1"
+  };
+
+  // 3. Hubungkan aplikasi ke database cloud
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  
+  // Tes koneksi singkat: jika berhasil, teks di bawah akan muncul di console browser Anda
+  console.log("Firebase berhasil terhubung!");
+</script>
 </body>
 </html>
