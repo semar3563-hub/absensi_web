@@ -14,7 +14,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Tambahan library untuk membuat file ZIP massal -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
@@ -300,7 +299,6 @@
                                 <div class="small text-muted fw-normal mt-1" id="adm-info-wali-tabel">Wali Kelas: -</div>
                             </div>
                             <div class="d-flex gap-2 align-items-center ms-auto flex-wrap">
-                                <!-- FITUR BARU: TOMBOL UNDUH MASSAL QR PER KELAS -->
                                 <button type="button" class="btn btn-sm btn-success fw-bold px-2" onclick="unduhMassalQRPerKelas()" title="Unduh Semua QR Code Kelas Ini (.ZIP)">
                                     <i class="fa-solid fa-file-zipper me-1"></i> ⚡ Unduh Semua QR (ZIP)
                                 </button>
@@ -334,13 +332,12 @@
                         </div>
                     </div>
 
-                    <!-- Elemen Tersembunyi untuk Pemrosesan QR Massal -->
                     <div id="qr-hidden-generator" style="display: none; visibility: hidden;"></div>
 
                     <div id="qr-preview-area" class="text-center p-3 bg-white border card-panel d-none">
                         <h6 id="qr-preview-name" class="fw-bold text-dark m-0"></h6>
                         <div id="qrcode" class="my-3 d-flex justify-content-center"></div>
-                      <button id="btn-download-qr" class="btn btn-dark btn-sm px-4"><i class="fa-solid fa-download me-1"></i> Unduh QR</button>
+                        <button id="btn-download-qr" class="btn btn-dark btn-sm px-4"><i class="fa-solid fa-download me-1"></i> Unduh QR</button>
                     </div>
                 </div>
 
@@ -360,7 +357,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <select id="rekap-bulan-periode" class="form-select form-select-sm" onchange="renderMasterRekapBulanan()">
-                                        </select>
+                                    </select>
                                 </div>
                                 <div class="col-md-3">
                                     <button class="btn btn-danger btn-sm w-100 fw-semibold text-truncate" onclick="pindahkanBulanTerpilihKeSampah()"><i class="fa-solid fa-trash-can me-1"></i> Hapus Rekap Bulan Ini</button>
@@ -406,7 +403,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="sampah-tbody-list">
-                                        </tbody>
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -469,7 +466,25 @@
     <p id="pop-nama-murid" class="text-secondary small m-0 fw-bold"></p>
 </div>
 
-<script>
+<!-- ================= KONFIGURASI FIREBASE REALTIME SDK MODULAR ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// ⚠️ SILAKAN GANTI DENGAN KONFIGURASI FIREBASE PROJECT ANDA SENDIRI
+const firebaseConfig = {
+    apiKey: "AIzaSyAsYourApiKeyHere-xxxxxx",
+    authDomain: "eduscan-sdn1gm.firebaseapp.com",
+    databaseURL: "https://eduscan-sdn1gm-default-rtdb.firebaseio.com",
+    projectId: "eduscan-sdn1gm",
+    storageBucket: "eduscan-sdn1gm.appspot.com",
+    messagingSenderId: "1234567890",
+    appId: "1:1234567890:web:abcdef123456"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 const defaultDB = {
     "Kelas 1 SD": [{ nisn: "3199826535", nama: "ALFAREZI KAVINDRA AIWIN", kelas: "Kelas 1 SD", jk: "L", alamat: "Gunung Malang" }],
     "Kelas 2 SD": [
@@ -504,7 +519,7 @@ const defaultDB = {
         { nisn: "3175510665", nama: "BIMA PUTRA ARDIANSYAH", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
         { nisn: "3173491410", nama: "DANISH GHAZALAN GHAZALI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
         { nisn: "3173507119", nama: "KAYLA REVA LINDA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
-        { nisn: "3177651786", nama: "KHANZA KHAYRA WILDA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3177651786", fontStyle: "normal", nama: "KHANZA KHAYRA WILDA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
         { nisn: "3179269406", nama: "MAULIDIA AILIN NAZILA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
         { nisn: "3179439823", nama: "MOCH. SHAFIULLAH AL FAQIH", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
         { nisn: "3174719246", nama: "MOHAMMAD ZAKI MAULIDIL ANZORI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
@@ -576,26 +591,45 @@ const defaultWali = {
     "Kelas 4 SD": "Juhairiyah", "Kelas 5 SD": "Suhartatik", "Kelas 6 SD": "Nursyamsiyah Yuliantari"
 };
 
-if (!localStorage.getItem('edu_db_sekolah_v5')) localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(defaultDB));
-if (!localStorage.getItem('edu_wali_kelas_v5')) localStorage.setItem('edu_wali_kelas_v5', JSON.stringify(defaultWali));
-if (!localStorage.getItem('edu_rekap_bulanan_v5')) localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify({}));
-if (!localStorage.getItem('edu_sampah_rekap_v7')) localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify([]));
+// State Variables Global
+window.dbSekolah = defaultDB;
+window.dbWaliKelas = defaultWali;
+window.dbRekapBulanan = {};
+window.dbSampahRekap = [];
+window.dataAbsensiHariIni = [];
+window.html5Qrcode = null;
+window.currentQRDataUrl = "";
+window.isAdminLoggedIn = false;
+window.bootstrapModalEdit = null;
+
+// Sinkronisasi Realtime Firebase Node Utama
+onValue(ref(db, "edu_db_sekolah"), (snapshot) => {
+    if (snapshot.exists()) { window.dbSekolah = snapshot.val(); } 
+    else { set(ref(db, "edu_db_sekolah"), defaultDB); window.dbSekolah = defaultDB; }
+    if(window.isAdminLoggedIn) renderTabelMuridAdmin();
+});
+
+onValue(ref(db, "edu_wali_kelas"), (snapshot) => {
+    if (snapshot.exists()) { window.dbWaliKelas = snapshot.val(); } 
+    else { set(ref(db, "edu_wali_kelas"), defaultWali); window.dbWaliKelas = defaultWali; }
+});
+
+onValue(ref(db, "edu_rekap_bulanan"), (snapshot) => {
+    window.dbRekapBulanan = snapshot.exists() ? snapshot.val() : {};
+    if(window.isAdminLoggedIn) renderMasterRekapBulanan();
+});
+
+onValue(ref(db, "edu_sampah_rekap"), (snapshot) => {
+    window.dbSampahRekap = snapshot.exists() ? snapshot.val() : [];
+    perbaruiBadgeJumlahSampah();
+    if(window.isAdminLoggedIn) renderMenuSampahAdmin();
+});
+
+// Setup default config setting
 if (!localStorage.getItem('edu_sch_tapel')) localStorage.setItem('edu_sch_tapel', '2025/2026');
 if (!localStorage.getItem('edu_sch_semester')) localStorage.setItem('edu_sch_semester', 'Semester Ganjil');
-
-let dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5'));
-let dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5'));
-let dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5'));
-let dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7'));
-
 document.getElementById('adm-sch-tapel').value = localStorage.getItem('edu_sch_tapel');
 document.getElementById('adm-sch-semester').value = localStorage.getItem('edu_sch_semester');
-
-let dataAbsensiHariIni = [];
-let html5Qrcode = null;
-let currentQRDataUrl = "";
-let isAdminLoggedIn = false;
-let bootstrapModalEdit = null;
 
 document.getElementById('g-tanggal').valueAsDate = new Date();
 const tglSkrg = new Date();
@@ -609,12 +643,12 @@ function perbaruiHeaderTahunWeb() {
 }
 
 function perbaruiBadgeJumlahSampah() {
-    let listSampah = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-    document.getElementById('badge-jumlah-sampah').innerText = listSampah.length;
+    document.getElementById('badge-jumlah-sampah').innerText = window.dbSampahRekap ? Object.keys(window.dbSampahRekap).length : 0;
 }
 perbaruiHeaderTahunWeb();
 
-function gantiMenu(menuId, element) {
+// Fungsi Global Window Scope Mapping
+window.gantiMenu = function(menuId, element) {
     document.querySelectorAll('.menu-section').forEach(s => s.classList.add('d-none'));
     document.querySelectorAll('.bottom-nav-link').forEach(l => l.classList.remove('active'));
     document.getElementById('section-' + menuId).classList.remove('d-none');
@@ -623,22 +657,22 @@ function gantiMenu(menuId, element) {
     document.getElementById('current-menu-title').innerText = titles[menuId];
 }
 
-function prosesLoginAdmin() {
+window.prosesLoginAdmin = function() {
     if (document.getElementById('admin-pass-input').value === 'admin123') {
-        isAdminLoggedIn = true;
+        window.isAdminLoggedIn = true;
         document.getElementById('admin-login-box').classList.add('d-none');
         document.getElementById('admin-main-content').classList.remove('d-none');
         loadNamaWaliKelasKeInput(); renderTabelMuridAdmin(); renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
     } else { alert("Sandi salah!"); }
 }
 
-function simpanAsetLembaga() {
+window.simpanAsetLembaga = function() {
     localStorage.setItem('edu_sch_tapel', document.getElementById('adm-sch-tapel').value);
     localStorage.setItem('edu_sch_semester', document.getElementById('adm-sch-semester').value);
     perbaruiHeaderTahunWeb();
 }
 
-function buatDropdownBulanOtomatis() {
+window.buatDropdownBulanOtomatis = function() {
     const selectPeriode = document.getElementById('rekap-bulan-periode');
     if (!selectPeriode) return;
     selectPeriode.innerHTML = "";
@@ -647,7 +681,6 @@ function buatDropdownBulanOtomatis() {
     const tanggalSekarang = new Date();
     const tahunSekarang = tanggalSekarang.getFullYear();
     const bulanSekarang = tanggalSekarang.getMonth() + 1;
-
     const TAHUN_START = 2026;
     
     for (let t = TAHUN_START; t <= tahunSekarang; t++) {
@@ -665,44 +698,40 @@ function buatDropdownBulanOtomatis() {
     selectPeriode.value = `${tahunSekarang}-${String(bulanSekarang).padStart(2, '0')}`;
 }
 
-function loadNamaWaliKelasKeInput() {
+window.loadNamaWaliKelasKeInput = function() {
     const kelasSelected = document.getElementById('adm-wali-kelas-select').value;
-    dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-    document.getElementById('adm-wali-nama-input').value = dbWaliKelas[kelasSelected] || "";
+    document.getElementById('adm-wali-nama-input').value = window.dbWaliKelas[kelasSelected] || "";
 }
 
-function simpanWaliKelasAdmin() {
+window.simpanWaliKelasAdmin = function() {
     const kelasSelected = document.getElementById('adm-wali-kelas-select').value;
     const namaWaliBaru = document.getElementById('adm-wali-nama-input').value.trim();
     if(!namaWaliBaru) { alert("Nama wali kelas tidak boleh kosong!"); return; }
 
-    dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-    dbWaliKelas[kelasSelected] = namaWaliBaru;
-    localStorage.setItem('edu_wali_kelas_v5', JSON.stringify(dbWaliKelas));
-    alert(`Wali Kelas untuk ${kelasSelected} berhasil diperbarui!`);
-    renderTabelMuridAdmin();
+    window.dbWaliKelas[kelasSelected] = namaWaliBaru;
+    set(ref(db, "edu_wali_kelas"), window.dbWaliKelas).then(() => {
+        alert(`Wali Kelas untuk ${kelasSelected} berhasil diperbarui!`);
+        renderTabelMuridAdmin();
+    });
 }
 
-function tampilkanWaliKelasDiGuru(kelas) {
+window.tampilkanWaliKelasDiGuru = function(kelas) {
     const infoArea = document.getElementById('g-wali-info');
     if(!kelas) { infoArea.innerText = ""; return; }
-    dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-    infoArea.innerText = `Wali Kelas: ${dbWaliKelas[kelas] || 'Belum Diatur'}`;
+    infoArea.innerText = `Wali Kelas: ${window.dbWaliKelas[kelas] || 'Belum Diatur'}`;
 }
 
-function dapatkanDataSiswaUrutAbjad(kelas) {
-    dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-    let listSiswa = dbSekolah[kelas] || [];
-    return listSiswa.sort((a, b) => a.nama.localeCompare(b.nama));
+window.dapatkanDataSiswaUrutAbjad = function(kelas) {
+    let listSiswa = window.dbSekolah[kelas] || [];
+    return Object.values(listSiswa).sort((a, b) => a.nama.localeCompare(b.nama));
 }
 
-function renderTabelMuridAdmin() {
+window.renderTabelMuridAdmin = function() {
     const k = document.getElementById('adm-filter-kelas').value;
     const tbody = document.getElementById('adm-tabel-murid');
     tbody.innerHTML = '';
     
-    dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-    document.getElementById('adm-info-wali-tabel').innerText = `Wali Kelas: ${dbWaliKelas[k] || '-'}`;
+    document.getElementById('adm-info-wali-tabel').innerText = `Wali Kelas: ${window.dbWaliKelas[k] || '-'}`;
 
     const muridTerurut = dapatkanDataSiswaUrutAbjad(k);
     if (muridTerurut.length === 0) {
@@ -727,8 +756,7 @@ function renderTabelMuridAdmin() {
     });
 }
 
-// ================= LOGIKA UPLOAD EXCEL (MASS IMPORT) =================
-function prosesUploadExcelMassal() {
+window.prosesUploadExcelMassal = function() {
     const kelasTujuan = document.getElementById('adm-excel-kelas-tujuan').value;
     const fileInput = document.getElementById('adm-excel-file-input');
     
@@ -753,8 +781,7 @@ function prosesUploadExcelMassal() {
                 return;
             }
 
-            dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-            if(!dbSekolah[kelasTujuan]) dbSekolah[kelasTujuan] = [];
+            if(!window.dbSekolah[kelasTujuan]) window.dbSekolah[kelasTujuan] = [];
 
             let jumlahSukses = 0;
             let jumlahDuplikat = 0;
@@ -783,15 +810,15 @@ function prosesUploadExcelMassal() {
 
                 if (namaSiswa && nomorNisn) {
                     let isDuplikat = false;
-                    for (let kl in dbSekolah) {
-                        if (dbSekolah[kl].some(siswa => siswa.nisn === nomorNisn)) {
+                    for (let kl in window.dbSekolah) {
+                        if (window.dbSekolah[kl].some(siswa => siswa.nisn === nomorNisn)) {
                             isDuplikat = true;
                             break;
                         }
                     }
 
                     if (!isDuplikat) {
-                        dbSekolah[kelasTujuan].push({
+                        window.dbSekolah[kelasTujuan].push({
                             nisn: nomorNisn,
                             nama: namaSiswa,
                             kelas: kelasTujuan,
@@ -805,13 +832,13 @@ function prosesUploadExcelMassal() {
                 }
             });
 
-            localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
-            document.getElementById('adm-filter-kelas').value = kelasTujuan;
-            renderTabelMuridAdmin();
-            renderMasterRekapBulanan();
-            fileInput.value = "";
-
-            alert(`🎉 Proses Impor Selesai!\n=======================\n✅ Berhasil ditambahkan: ${jumlahSukses} Siswa\n⚠️ Dilewati (NISN Duplikat/Ganda): ${jumlahDuplikat} Siswa\n\nData dialokasikan ke: ${kelasTujuan}`);
+            set(ref(db, "edu_db_sekolah"), window.dbSekolah).then(() => {
+                document.getElementById('adm-filter-kelas').value = kelasTujuan;
+                renderTabelMuridAdmin();
+                renderMasterRekapBulanan();
+                fileInput.value = "";
+                alert(`🎉 Proses Impor Selesai!\n=======================\n✅ Berhasil ditambahkan: ${jumlahSukses} Siswa\n⚠️ Dilewati (NISN Duplikat/Ganda): ${jumlahDuplikat} Siswa\n\nData dialokasikan ke: ${kelasTujuan}`);
+            });
 
         } catch (error) {
             console.error(error);
@@ -821,8 +848,7 @@ function prosesUploadExcelMassal() {
     pembaca.readAsBinaryString(fileBerkas);
 }
 
-// ================= LOGIKA BARU: UNDUH MASSAL QR CODE PER KELAS (.ZIP) =================
-function unduhMassalQRPerKelas() {
+window.unduhMassalQRPerKelas = function() {
     const kelasTerpilih = document.getElementById('adm-filter-kelas').value;
     const muridTerurut = dapatkanDataSiswaUrutAbjad(kelasTerpilih);
 
@@ -837,22 +863,17 @@ function unduhMassalQRPerKelas() {
 
     const zip = new JSZip();
     const containerTersembunyi = document.getElementById('qr-hidden-generator');
-    
     let counterSelesai = 0;
 
-    // Memproses satu per satu siswa secara asinkronus menggunakan timeout kecil agar browser tidak macet
     muridTerurut.forEach((siswa) => {
-        containerTersembunyi.innerHTML = ''; // bersihkan container
-        
-        // Buat QR Code virtual ke elemen tersembunyi
+        containerTersembunyi.innerHTML = ''; 
         const qrObjek = new QRCode(containerTersembunyi, {
             text: siswa.nisn,
-            width: 250,      // Resolusi lebih tinggi untuk cetak massal
+            width: 250,      
             height: 250,
             correctLevel: QRCode.CorrectLevel.H
         });
 
-        // Berikan waktu jeda sedikit bagi QRCode.js untuk menggambar ke canvas/img
         setTimeout(() => {
             const img = containerTersembunyi.querySelector('img');
             const canvas = containerTersembunyi.querySelector('canvas');
@@ -865,21 +886,16 @@ function unduhMassalQRPerKelas() {
             }
 
             if (dataUrl) {
-                // Ekstrak bagian base64 datanya saja untuk di-input ke jszip
                 const base64Data = dataUrl.split(',')[1];
                 const namaFileBersih = siswa.nama.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_');
-                
-                // Masukkan file png ke folder ZIP
                 zip.file(`QR_${siswa.nisn}_${namaFileBersih}.png`, base64Data, { base64: true });
             }
 
             counterSelesai++;
 
-            // Jika semua siswa telah selesai diproses, buat dan download file ZIP
             if (counterSelesai === muridTerurut.length) {
                 zip.generateAsync({ type: "blob" }).then(function (content) {
                     const formatNamaZip = `Paket_QR_Code_${kelasTerpilih.replace(/\s+/g, '_')}.zip`;
-                    
                     const linkVirtual = document.createElement('a');
                     linkVirtual.href = URL.createObjectURL(content);
                     linkVirtual.download = formatNamaZip;
@@ -887,7 +903,7 @@ function unduhMassalQRPerKelas() {
                     linkVirtual.click();
                     document.body.removeChild(linkVirtual);
                     
-                    containerTersembunyi.innerHTML = ''; // bersihkan total memori
+                    containerTersembunyi.innerHTML = ''; 
                     alert(`🎉 Berhasil! Seluruh QR Code (${muridTerurut.length} siswa) ${kelasTerpilih} sukses dikemas dan diunduh.`);
                 });
             }
@@ -895,12 +911,9 @@ function unduhMassalQRPerKelas() {
     });
 }
 
-// ================= TOMBOL v7.6: PINDAHKAN SATU KELAS SISWA KE SAMPAH =================
-function pindahkanSatuKelasSiswaKeSampah() {
+window.pindahkanSatuKelasSiswaKeSampah = function() {
     const kelasTerpilih = document.getElementById('adm-filter-kelas').value;
-    dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-    
-    let listSiswaKelas = dbSekolah[kelasTerpilih] || [];
+    let listSiswaKelas = window.dbSekolah[kelasTerpilih] || [];
     if (listSiswaKelas.length === 0) {
         alert(`Data siswa untuk ${kelasTerpilih} sudah kosong.`);
         return;
@@ -909,30 +922,29 @@ function pindahkanSatuKelasSiswaKeSampah() {
     if (confirm(`Apakah Anda yakin ingin mengosongkan ${kelasTerpilih}?\nSemua data siswa (${listSiswaKelas.length} anak) akan dipindahkan ke folder Sampah.`)) {
         if (confirm(`⚠️ TINDAKAN KEAMANAN ADMIN:\n\nApakah benar Anda ingin memindahkan data siswa ${kelasTerpilih} sekaligus?\nKlik 'OK' untuk melanjutkan.`)) {
             
-            dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-            
-            dbSampahRekap.push({
+            let listSampah = Array.isArray(window.dbSampahRekap) ? window.dbSampahRekap : [];
+            listSampah.push({
                 idSampah: 'MASS_SISWA_' + Date.now(),
                 periode: '[Siswa Massal]',
                 kelas: kelasTerpilih,
                 kontenData: listSiswaKelas 
             });
-            localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify(dbSampahRekap));
 
-            dbSekolah[kelasTerpilih] = [];
-            localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
-
-            alert(`🎉 Berhasil! Seluruh data siswa ${kelasTerpilih} telah dipindahkan ke folder Sampah.`);
-            renderTabelMuridAdmin();
-            perbaruiBadgeJumlahSampah();
-            document.getElementById('qr-preview-area').classList.add('d-none');
+            window.dbSekolah[kelasTerpilih] = [];
+            
+            set(ref(db, "edu_db_sekolah"), window.dbSekolah);
+            set(ref(db, "edu_sampah_rekap"), listSampah).then(() => {
+                alert(`🎉 Berhasil! Seluruh data siswa ${kelasTerpilih} telah dipindahkan ke folder Sampah.`);
+                renderTabelMuridAdmin();
+                perbaruiBadgeJumlahSampah();
+                document.getElementById('qr-preview-area').classList.add('d-none');
+            });
         }
     }
 }
 
-function bukaModalEditAdmin(kelas, nisn) {
-    dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-    let m = dbSekolah[kelas].find(x => x.nisn === nisn);
+window.bukaModalEditAdmin = function(kelas, nisn) {
+    let m = window.dbSekolah[kelas].find(x => x.nisn === nisn);
     if (!m) return;
 
     document.getElementById('edit-old-kelas').value = kelas;
@@ -942,11 +954,11 @@ function bukaModalEditAdmin(kelas, nisn) {
     document.getElementById('edit-m-jk').value = (m.jk === 'L' || m.jk === 'Laki-laki') ? "L" : "P";
     document.getElementById('edit-m-alamat').value = m.alamat || "";
 
-    if(!bootstrapModalEdit) bootstrapModalEdit = new bootstrap.Modal(document.getElementById('modalEditMurid'));
-    bootstrapModalEdit.show();
+    if(!window.bootstrapModalEdit) window.bootstrapModalEdit = new bootstrap.Modal(document.getElementById('modalEditMurid'));
+    window.bootstrapModalEdit.show();
 }
 
-function simpanPerubahanMuridAdmin() {
+window.simpanPerubahanMuridAdmin = function() {
     const kelas = document.getElementById('edit-old-kelas').value;
     const oldNisn = document.getElementById('edit-old-nisn').value;
     const namaBaru = document.getElementById('edit-m-nama').value.trim();
@@ -956,31 +968,35 @@ function simpanPerubahanMuridAdmin() {
 
     if(!namaBaru || !nisnBaru || !alamatBaru) { alert("Semua kolom data harus diisi!"); return; }
 
-    dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
     if(oldNisn !== nisnBaru) {
-        for (let x in dbSekolah) {
-            if(dbSekolah[x].some(z => z.nisn === nisnBaru)) { alert("NIS/NISN baru sudah dipakai siswa lain!"); return; }
+        for (let x in window.dbSekolah) {
+            if(window.dbSekolah[x].some(z => z.nisn === nisnBaru)) { alert("NIS/NISN baru sudah dipakai siswa lain!"); return; }
         }
     }
 
-    let indeksMurid = dbSekolah[kelas].findIndex(x => x.nisn === oldNisn);
+    let indeksMurid = window.dbSekolah[kelas].findIndex(x => x.nisn === oldNisn);
     if(indeksMurid !== -1) {
-        dbSekolah[kelas][indeksMurid].nama = namaBaru; dbSekolah[kelas][indeksMurid].nisn = nisnBaru;
-        dbSekolah[kelas][indeksMurid].jk = jkBaru; dbSekolah[kelas][indeksMurid].alamat = alamatBaru;
+        window.dbSekolah[kelas][indeksMurid].nama = namaBaru; window.dbSekolah[kelas][indeksMurid].nisn = nisnBaru;
+        window.dbSekolah[kelas][indeksMurid].jk = jkBaru; window.dbSekolah[kelas][indeksMurid].alamat = alamatBaru;
     }
-    localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
 
-    dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-    for (let periode in dbRekapBulanan) {
-        if (dbRekapBulanan[periode][oldNisn]) {
-            let catatanLama = dbRekapBulanan[periode][oldNisn].catatan;
-            dbRekapBulanan[periode][nisnBaru] = { nama: namaBaru, kelas: kelas, jk: jkBaru, catatan: catatanLama };
-            if (oldNisn !== nisnBaru) delete dbRekapBulanan[periode][oldNisn];
+    for (let periode in window.dbRekapBulanan) {
+        if (window.dbRekapBulanan[periode][oldNisn]) {
+            let catatanLama = window.dbRekapBulanan[periode][oldNisn].catatan;
+            window.dbRekapBulanan[periode][nisnBaru] = { nama: namaBaru, kelas: kelas, jk: jkBaru, catatan: catatanLama };
+            if (oldNisn !== nisnBaru) delete window.dbRekapBulanan[periode][oldNisn];
         }
     }
-    localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify(dbRekapBulanan));
 
-    bootstrapModalEdit.hide(); renderTabelMuridAdmin(); renderMasterRekapBulanan(); buatQRAdmin(nisnBaru, namaBaru);
+    update(ref(db, "/"), {
+        "edu_db_sekolah": window.dbSekolah,
+        "edu_rekap_bulanan": window.dbRekapBulanan
+    }).then(() => {
+        window.bootstrapModalEdit.hide(); 
+        renderTabelMuridAdmin(); 
+        renderMasterRekapBulanan(); 
+        buatQRAdmin(nisnBaru, namaBaru);
+    });
 }
 
 document.getElementById('form-tambah-murid-admin').addEventListener('submit', function(e) {
@@ -991,34 +1007,35 @@ document.getElementById('form-tambah-murid-admin').addEventListener('submit', fu
     const jk = document.getElementById('adm-m-jk').value;
     const almt = document.getElementById('adm-m-alamat').value.trim();
     
-    dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-    for (let x in dbSekolah) { 
-        if(dbSekolah[x].some(z => z.nisn === n)) { alert("NIS/NISN sudah terdaftar!"); return; } 
+    for (let x in window.dbSekolah) { 
+        if(window.dbSekolah[x].some(z => z.nisn === n)) { alert("NIS/NISN sudah terdaftar!"); return; } 
     }
     
-    dbSekolah[k].push({ nisn: n, nama: nm, kelas: k, jk: jk, alamat: almt });
-    localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
-    
-    document.getElementById('adm-filter-kelas').value = k;
-    renderTabelMuridAdmin(); renderMasterRekapBulanan(); buatQRAdmin(n, nm);
-    document.getElementById('adm-m-nisn').value = ''; document.getElementById('adm-m-nama').value = '';
-    document.getElementById('adm-m-jk').value = ''; document.getElementById('adm-m-alamat').value = '';
+    if(!window.dbSekolah[k]) window.dbSekolah[k] = [];
+    window.dbSekolah[k].push({ nisn: n, nama: nm, kelas: k, jk: jk, alamat: almt });
+
+    set(ref(db, "edu_db_sekolah"), window.dbSekolah).then(() => {
+        document.getElementById('adm-filter-kelas').value = k;
+        renderTabelMuridAdmin(); renderMasterRekapBulanan(); buatQRAdmin(n, nm);
+        document.getElementById('adm-m-nisn').value = ''; document.getElementById('adm-m-nama').value = '';
+        document.getElementById('adm-m-jk').value = ''; document.getElementById('adm-m-alamat').value = '';
+    });
 });
 
-function buatQRAdmin(nisn, nama) {
+window.buatQRAdmin = function(nisn, nama) {
     document.getElementById('qr-preview-area').classList.remove('d-none');
     document.getElementById('qr-preview-name').innerText = nama;
     const b = document.getElementById('qrcode'); b.innerHTML = '';
     new QRCode(b, { text: nisn, width: 130, height: 130, correctLevel : QRCode.CorrectLevel.H });
-    setTimeout(() => { const img = b.querySelector('img'); const cvs = b.querySelector('canvas'); currentQRDataUrl = img ? img.src : (cvs ? cvs.toDataURL("image/png") : ""); }, 400);
+    setTimeout(() => { const img = b.querySelector('img'); const cvs = b.querySelector('canvas'); window.currentQRDataUrl = img ? img.src : (cvs ? cvs.toDataURL("image/png") : ""); }, 400);
 }
 
-function hapusMuridAdmin(k, n) {
+window.hapusMuridAdmin = function(k, n) {
     if(confirm("Hapus murid ini dari sekolah?")) { 
-        dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-        dbSekolah[k] = dbSekolah[k].filter(x => x.nisn !== n);
-        localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
-        renderTabelMuridAdmin(); renderMasterRekapBulanan(); document.getElementById('qr-preview-area').classList.add('d-none'); 
+        window.dbSekolah[k] = window.dbSekolah[k].filter(x => x.nisn !== n);
+        set(ref(db, "edu_db_sekolah"), window.dbSekolah).then(() => {
+            renderTabelMuridAdmin(); renderMasterRekapBulanan(); document.getElementById('qr-preview-area').classList.add('d-none'); 
+        });
     }
 }
 
@@ -1040,7 +1057,7 @@ document.getElementById('btn-kunci-form').addEventListener('click', function() {
     document.getElementById('info-badge-kelas').innerText = kelas;
     document.getElementById('info-badge-kelas').className = "badge bg-success rounded-pill";
 
-    dataAbsensiHariIni = listTerurut.map(m => ({ nisn: m.nisn, nama: m.nama, kelas: m.kelas, jk: m.jk || 'L', status: "Alpha" }));
+    window.dataAbsensiHariIni = listTerurut.map(m => ({ nisn: m.nisn, nama: m.nama, kelas: m.kelas, jk: m.jk || 'L', status: "Alpha" }));
     renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan(); aktifkanKameraHP();
 });
 
@@ -1050,7 +1067,7 @@ function aktifkanKameraHP() {
 
     function sukses(teks) {
         let bersihTeks = teks.split('/')[0].trim();
-        let m = dataAbsensiHariIni.find(x => x.nisn.split('/')[0].trim() === bersihTeks);
+        let m = window.dataAbsensiHariIni.find(x => x.nisn.split('/')[0].trim() === bersihTeks);
         if (m) {
             if(m.status === "Hadir") { fd.innerHTML = `⚠️ <b>${m.nama}</b> sudah absen.`; } 
             else {
@@ -1065,50 +1082,51 @@ function aktifkanKameraHP() {
             }
         } else { fd.innerHTML = `❌ QR tidak valid untuk kelas ini.`; }
     }
-    if(!html5Qrcode) html5Qrcode = new Html5Qrcode("reader");
-    html5Qrcode.start({ facingMode: "environment" }, { fps: 22, qrbox: { width: 220, height: 220 } }, sukses, () => {}).then(() => {
+    if(!window.html5Qrcode) window.html5Qrcode = new Html5Qrcode("reader");
+    window.html5Qrcode.start({ facingMode: "environment" }, { fps: 22, qrbox: { width: 220, height: 220 } }, sukses, () => {}).then(() => {
         fd.className = "alert alert-success mt-2 mb-0 py-2 small bg-success text-white fw-bold"; fd.innerHTML = "🟢 Kamera Aktif! Silahkan scan QR murid.";
     }).catch(() => { fd.className = "alert alert-danger mt-2 mb-0 py-2 small"; fd.innerHTML = "❌ Lensa gagal diakses."; });
 }
 
 function renderTabelAbsensiGuru() {
     const tbody = document.getElementById('tabel-rekap-absensi-guru'); tbody.innerHTML = '';
-    dataAbsensiHariIni.forEach((m, idx) => {
+    window.dataAbsensiHariIni.forEach((m, idx) => {
         let c = m.status === "Hadir" ? "bg-success-subtle text-success" : (m.status === "Sakit" ? "bg-warning-subtle text-warning-emphasis" : (m.status === "Izin" ? "bg-info-subtle text-info-emphasis" : "bg-danger-subtle text-danger"));
         tbody.innerHTML += `<tr><td><b>${m.nama}</b><br><small class="text-muted">NISN: ${m.nisn}</small></td><td><select class="form-select form-select-sm fw-bold ${c}" onchange="gantiStatusManual(${idx}, this.value)"><option value="Hadir" ${m.status==='Hadir'?'selected':''}>Hadir</option><option value="Sakit" ${m.status==='Sakit'?'selected':''}>Sakit</option><option value="Izin" ${m.status==='Izin'?'selected':''}>Izin</option><option value="Alpha" ${m.status==='Alpha'?'selected':''}>Alpha</option></select></td></tr>`;
     });
 }
 
-function gantiStatusManual(idx, v) {
-    dataAbsensiHariIni[idx].status = v; renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan();
+window.gantiStatusManual = function(idx, v) {
+    window.dataAbsensiHariIni[idx].status = v; renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan();
 }
 
 document.getElementById('btn-reset-form').addEventListener('click', function() {
     document.getElementById('g-nama').disabled = false; document.getElementById('g-mapel').disabled = false; document.getElementById('g-kelas').disabled = false; document.getElementById('g-tanggal').disabled = false; document.getElementById('g-waktu').disabled = false;
     this.classList.add('d-none'); document.getElementById('btn-kunci-form').classList.remove('d-none');
     document.getElementById('wrapper-kamera').classList.add('disabled-view'); document.getElementById('btn-download-pdf-guru').disabled = true;
-    if(html5Qrcode && html5Qrcode.isScanning) html5Qrcode.stop().then(() => { document.getElementById('reader').innerHTML = ''; });
-    dataAbsensiHariIni = []; document.getElementById('tabel-rekap-absensi-guru').innerHTML = `<tr><td colspan="2" class="text-center text-muted py-4">Belum ada kelas aktif yang dikunci.</td></tr>`;
+    if(window.html5Qrcode && window.html5Qrcode.isScanning) window.html5Qrcode.stop().then(() => { document.getElementById('reader').innerHTML = ''; });
+    window.dataAbsensiHariIni = []; document.getElementById('tabel-rekap-absensi-guru').innerHTML = `<tr><td colspan="2" class="text-center text-muted py-4">Belum ada kelas aktif yang dikunci.</td></tr>`;
 });
 
 function simpanLogKeDatabaseBulanan() {
     const tglInput = document.getElementById('g-tanggal').value; if(!tglInput) return;
     const parts = tglInput.split('-'); const periode = `${parts[0]}-${parts[1]}`; const tanggalHari = parseInt(parts[2], 10);
 
-    dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-    if (!dbRekapBulanan[periode]) dbRekapBulanan[periode] = {};
+    if (!window.dbRekapBulanan[periode]) window.dbRekapBulanan[periode] = {};
 
-    dataAbsensiHariIni.forEach(m => {
-        if (!dbRekapBulanan[periode][m.nisn]) {
-            dbRekapBulanan[periode][m.nisn] = { nama: m.nama, kelas: m.kelas, jk: m.jk, catatan: {} };
+    window.dataAbsensiHariIni.forEach(m => {
+        if (!window.dbRekapBulanan[periode][m.nisn]) {
+            window.dbRekapBulanan[periode][m.nisn] = { nama: m.nama, kelas: m.kelas, jk: m.jk, catatan: {} };
         }
-        dbRekapBulanan[periode][m.nisn].catatan[tanggalHari] = m.status;
+        if(!window.dbRekapBulanan[periode][m.nisn].catatan) window.dbRekapBulanan[periode][m.nisn].catatan = {};
+        window.dbRekapBulanan[periode][m.nisn].catatan[tanggalHari] = m.status;
     });
-    localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify(dbRekapBulanan));
+    
+    set(ref(db, "edu_rekap_bulanan"), window.dbRekapBulanan);
 }
 
 // ================= RENDER MATRIKS REKAP UTAMA =================
-function renderMasterRekapBulanan() {
+window.renderMasterRekapBulanan = function() {
     const kelasTerpilih = document.getElementById('rekap-bulan-kelas').value;
     const periodeTerpilih = document.getElementById('rekap-bulan-periode').value;
     if(!periodeTerpilih) return;
@@ -1124,13 +1142,12 @@ function renderMasterRekapBulanan() {
     headerHTML += `<th class="bg-success text-white">H</th><th class="bg-info text-white">I</th><th class="bg-warning text-dark">S</th><th class="bg-danger text-white">A</th>`;
     theadRow.innerHTML = headerHTML;
 
-    dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-    const dataBulanIni = dbRekapBulanan[periodeTerpilih] || {};
+    const dataBulanIni = window.dbRekapBulanan[periodeTerpilih] || {};
     const muridKelasAsli = dapatkanDataSiswaUrutAbjad(kelasTerpilih);
 
     let adaDataAbsensi = false;
     muridKelasAsli.forEach(m => {
-        if(dataBulanIni[m.nisn] && Object.keys(dataBulanIni[m.nisn].catatan).length > 0) adaDataAbsensi = true;
+        if(dataBulanIni[m.nisn] && dataBulanIni[m.nisn].catatan && Object.keys(dataBulanIni[m.nisn].catatan).length > 0) adaDataAbsensi = true;
     });
 
     if (muridKelasAsli.length === 0 || !adaDataAbsensi) {
@@ -1141,7 +1158,7 @@ function renderMasterRekapBulanan() {
         const jKString = (m.jk === 'L' || m.jk === 'Laki-laki') ? 'L' : 'P';
         let rowHTML = `<td class="cell-name"><b>${m.nama}</b></td><td><span class="badge bg-light text-dark">${jKString}</span></td>`;
         let tHadir = 0, tSakit = 0, tIzin = 0, tAlpha = 0;
-        const riwayatSiswa = dataBulanIni[m.nisn] ? dataBulanIni[m.nisn].catatan : {};
+        const riwayatSiswa = (dataBulanIni[m.nisn] && dataBulanIni[m.nisn].catatan) ? dataBulanIni[m.nisn].catatan : {};
 
         for(let d = 1; d <= jumlahHari; d++) {
             const statusTanggal = riwayatSiswa[d];
@@ -1156,49 +1173,47 @@ function renderMasterRekapBulanan() {
     });
 }
 
-function pindahkanBulanTerpilihKeSampah() {
+window.pindahkanBulanTerpilihKeSampah = function() {
     const kelasTerpilih = document.getElementById('rekap-bulan-kelas').value;
     const periodeTerpilih = document.getElementById('rekap-bulan-periode').value;
     
-    dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-    if (!dbRekapBulanan[periodeTerpilih]) { alert("Tidak ditemukan data absensi apapun pada periode bulan ini."); return; }
+    if (!window.dbRekapBulanan[periodeTerpilih]) { alert("Tidak ditemukan data absensi apapun pada periode bulan ini."); return; }
 
     let dataSpesifikKelas = {};
-    for (let nisn in dbRekapBulanan[periodeTerpilih]) {
-        if (dbRekapBulanan[periodeTerpilih][nisn].kelas === kelasTerpilih) {
-            dataSpesifikKelas[nisn] = dbRekapBulanan[periodeTerpilih][nisn];
+    for (let nisn in window.dbRekapBulanan[periodeTerpilih]) {
+        if (window.dbRekapBulanan[periodeTerpilih][nisn].kelas === kelasTerpilih) {
+            dataSpesifikKelas[nisn] = window.dbRekapBulanan[periodeTerpilih][nisn];
         }
     }
 
     if (Object.keys(dataSpesifikKelas).length === 0) { alert(`Data absensi untuk ${kelasTerpilih} di bulan ini memang kosong.`); return; }
 
     if (confirm(`Apakah Anda yakin ingin menghapus & memindahkan rekap ${kelasTerpilih} periode ${periodeTerpilih} ke Menu Sampah?`)) {
-        dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-        dbSampahRekap.push({ idSampah: 'REKAP_' + Date.now(), periode: periodeTerpilih, kelas: kelasTerpilih, kontenData: dataSpesifikKelas });
-        localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify(dbSampahRekap));
+        let listSampah = Array.isArray(window.dbSampahRekap) ? window.dbSampahRekap : [];
+        listSampah.push({ idSampah: 'REKAP_' + Date.now(), periode: periodeTerpilih, kelas: kelasTerpilih, kontenData: dataSpesifikKelas });
 
-        for (let nisn in dataSpesifikKelas) { delete dbRekapBulanan[periodeTerpilih][nisn]; }
-        if (Object.keys(dbRekapBulanan[periodeTerpilih]).length === 0) { delete dbRekapBulanan[periodeTerpilih]; }
-        localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify(dbRekapBulanan));
+        for (let nisn in dataSpesifikKelas) { delete window.dbRekapBulanan[periodeTerpilih][nisn]; }
+        if (Object.keys(window.dbRekapBulanan[periodeTerpilih]).length === 0) { delete window.dbRekapBulanan[periodeTerpilih]; }
         
-        alert("Rekap bulan terpilih berhasil dipindahkan ke Sampah!");
-        renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
+        set(ref(db, "edu_rekap_bulanan"), window.dbRekapBulanan);
+        set(ref(db, "edu_sampah_rekap"), listSampah).then(() => {
+            alert("Rekap bulan terpilih berhasil dipindahkan ke Sampah!");
+            renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
+        });
     }
 }
 
 // ================= RENDER DAN PENGELOLAAN MENU SAMPAH TERPADU (v7.6) =================
-function renderMenuSampahAdmin() {
+window.renderMenuSampahAdmin = function() {
     const tbody = document.getElementById('sampah-tbody-list'); tbody.innerHTML = '';
-    dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
     const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-    if (dbSampahRekap.length === 0) {
+    if (!window.dbSampahRekap || Object.keys(window.dbSampahRekap).length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-4"><i class="fa-solid fa-trash-arrow-up me-1"></i> Folder sampah kosong. Tidak ada file cadangan saat ini.</td></tr>`; return;
     }
 
-    dbSampahRekap.forEach(item => {
+    Object.values(window.dbSampahRekap).forEach(item => {
         let barisJudul = "";
-        
         if (item.idSampah.startsWith("MASS_SISWA")) {
             barisJudul = `<span class="fw-bold text-danger"><i class="fa-solid fa-users-slash me-2"></i>Data Siswa Massal</span> <small class="text-muted">(${item.kontenData.length} Murid)</small>`;
         } else {
@@ -1219,55 +1234,50 @@ function renderMenuSampahAdmin() {
     });
 }
 
-function puluhkanSampahRekap(idSampah) {
-    dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-    let item = dbSampahRekap.find(x => x.idSampah === idSampah); if (!item) return;
+window.puluhkanSampahRekap = function(idSampah) {
+    let listSampah = Object.values(window.dbSampahRekap);
+    let item = listSampah.find(x => x.idSampah === idSampah); if (!item) return;
 
     if (idSampah.startsWith("MASS_SISWA")) {
-        dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-        if (!dbSekolah[item.kelas]) dbSekolah[item.kelas] = [];
+        if (!window.dbSekolah[item.kelas]) window.dbSekolah[item.kelas] = [];
         
         item.kontenData.forEach(siswaBaru => {
-            if(!dbSekolah[item.kelas].some(s => s.nisn === siswaBaru.nisn)) {
-                dbSekolah[item.kelas].push(siswaBaru);
+            if(!window.dbSekolah[item.kelas].some(s => s.nisn === siswaBaru.nisn)) {
+                window.dbSekolah[item.kelas].push(siswaBaru);
             }
         });
-        localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
+        set(ref(db, "edu_db_sekolah"), window.dbSekolah);
         document.getElementById('adm-filter-kelas').value = item.kelas;
         alert(`Sukses memulihkan data siswa ${item.kelas} kembali ke database aktif!`);
-
     } else {
-        dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-        if (!dbRekapBulanan[item.periode]) dbRekapBulanan[item.periode] = {};
-        for (let nisn in item.kontenData) { dbRekapBulanan[item.periode][nisn] = item.kontenData[nisn]; }
-        localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify(dbRekapBulanan));
+        if (!window.dbRekapBulanan[item.periode]) window.dbRekapBulanan[item.periode] = {};
+        for (let nisn in item.kontenData) { window.dbRekapBulanan[item.periode][nisn] = item.kontenData[nisn]; }
+        set(ref(db, "edu_rekap_bulanan"), window.dbRekapBulanan);
         alert(`Rekap ${item.kelas} periode ${item.periode} telah sukses dikembalikan ke tabel utama!`);
     }
 
-    dbSampahRekap = dbSampahRekap.filter(x => x.idSampah !== idSampah);
-    localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify(dbSampahRekap));
-    
-    renderMenuSampahAdmin(); renderTabelMuridAdmin(); renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
+    let sampahUpdate = listSampah.filter(x => x.idSampah !== idSampah);
+    set(ref(db, "edu_sampah_rekap"), sampahUpdate).then(() => {
+        renderMenuSampahAdmin(); renderTabelMuridAdmin(); renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
+    });
 }
 
-function hapusSampahPermanenSatuBulan(idSampah) {
+window.hapusSampahPermanenSatuBulan = function(idSampah) {
     if (confirm("🚨 PERINGATAN: Menghapus berkas dari sampah akan memusnahkan data ini secara permanen dari browser selamanya! Lanjutkan?")) {
-        dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-        dbSampahRekap = dbSampahRekap.filter(x => x.idSampah !== idSampah);
-        localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify(dbSampahRekap));
-        renderMenuSampahAdmin(); perbaruiBadgeJumlahSampah();
+        let sampahUpdate = Object.values(window.dbSampahRekap).filter(x => x.idSampah !== idSampah);
+        set(ref(db, "edu_sampah_rekap"), sampahUpdate).then(() => {
+            renderMenuSampahAdmin(); perbaruiBadgeJumlahSampah();
+        });
     }
 }
 
-// =========================================================================
-// LOGIKA UTAMA: FUNGSI UNDUH BARCODE / QR CODE SISWA MANUAL (Tunggal)
-// =========================================================================
-function kosongkanSemuaSampahPermanen() {
-    dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-    if (dbSampahRekap.length === 0) { alert("Folder sampah memang sudah kosong."); return; }
+window.kosongkanSemuaSampahPermanen = function() {
+    if (!window.dbSampahRekap || Object.keys(window.dbSampahRekap).length === 0) { alert("Folder sampah memang sudah kosong."); return; }
     if (confirm("💥 AWAS! Apakah Anda benar-benar ingin mengosongkan folder sampah? Semua berkas backup rekap & data siswa di dalamnya akan HILANG TOTAL secara permanen!")) {
-        localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify([])); alert("Folder sampah berhasil dikosongkan total.");
-        renderMenuSampahAdmin(); perbaruiBadgeJumlahSampah();
+        remove(ref(db, "edu_sampah_rekap")).then(() => {
+            alert("Folder sampah berhasil dikosongkan total.");
+            renderMenuSampahAdmin(); perbaruiBadgeJumlahSampah();
+        });
     }
 }
 
@@ -1277,7 +1287,6 @@ document.getElementById('btn-download-qr').addEventListener('click', function() 
 
     const imgElement = qrContainer.querySelector('img');
     const canvasElement = qrContainer.querySelector('canvas');
-    
     let base64ImageSrc = "";
     
     if (imgElement && imgElement.src && imgElement.src.startsWith('data:image')) {
@@ -1304,12 +1313,11 @@ document.getElementById('btn-download-qr').addEventListener('click', function() 
 });
 
 // ================= EKSPOR LAPORAN PDF TERBARU =================
-function downloadPDFBulananAdmin() {
+window.downloadPDFBulananAdmin = function() {
     const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
     const kelas = document.getElementById('rekap-bulan-kelas').value; const periode = document.getElementById('rekap-bulan-periode').value;
     
-    dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-    const namaWali = dbWaliKelas[kelas] || '-'; const tapelAktif = localStorage.getItem('edu_sch_tapel') || '2025/2026'; const semesterAktif = localStorage.getItem('edu_sch_semester') || 'Semester Ganjil';
+    const namaWali = window.dbWaliKelas[kelas] || '-'; const tapelAktif = localStorage.getItem('edu_sch_tapel') || '2025/2026'; const semesterAktif = localStorage.getItem('edu_sch_semester') || 'Semester Ganjil';
 
     const [tahun, bulan] = periode.split('-'); const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const textBulanSaja = namaBulanIndo[parseInt(bulan, 10) - 1]; const jumlahHari = new Date(tahun, bulan, 0).getDate();
@@ -1325,8 +1333,7 @@ function downloadPDFBulananAdmin() {
     for (let d = 1; d <= 31; d++) { rowHeader2[3 + d] = String(d); }
     rowHeader2.push('H', 'I', 'S', 'A');
 
-    dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-    const dataBulanIni = dbRekapBulanan[periode] || {}; const muridKelasAsli = dapatkanDataSiswaUrutAbjad(kelas);
+    const dataBulanIni = window.dbRekapBulanan[periode] || {}; const muridKelasAsli = dapatkanDataSiswaUrutAbjad(kelas);
     
     let bodyRows = []; let jmlLaki = 0; let jmlPerempuan = 0;
     muridKelasAsli.forEach((m, idx) => {
@@ -1334,7 +1341,7 @@ function downloadPDFBulananAdmin() {
         if (jenisKelaminSiswa === 'L') jmlLaki++; else jmlPerempuan++;
 
         let barisData = [ String(idx + 1), m.nisn, m.nama, jenisKelaminSiswa ];
-        let h = 0, i = 0, s = 0, a = 0; const riwayat = dataBulanIni[m.nisn] ? dataBulanIni[m.nisn].catatan : {};
+        let h = 0, i = 0, s = 0, a = 0; const riwayat = (dataBulanIni[m.nisn] && dataBulanIni[m.nisn].catatan) ? dataBulanIni[m.nisn].catatan : {};
 
         for(let d = 1; d <= 31; d++) {
             if(d <= jumlahHari) {
@@ -1369,7 +1376,7 @@ function downloadPDFBulananAdmin() {
     doc.save(`Laporan_Bulanan_SDN_1_GM_${kelas.replace(/\s+/g, '_')}_${textBulanSaja}.pdf`);
 }
 
-buatDropdownBulanOtomatis(); renderTabelMuridAdmin();
+buatDropdownBulanOtomatis();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
