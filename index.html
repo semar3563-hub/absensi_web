@@ -3,1477 +3,1383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Absensi Kehadiran Murid SDN 1 Gunung Malang</title>
+    <title>EduScan Pro v7.6 - SDN 1 GM</title>
     
-    <!-- Pustaka CSS Pihak Ketiga (Bootstrap & FontAwesome) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <style>
-        body {
-            background-color: #f4f6f9;
-            padding-bottom: 75px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --dark-slate: #0f172a;
+            --bg-light: #f8fafc;
         }
-        .main-header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: #334155;
+            padding-bottom: 80px;
+        }
+
+        .main-navbar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 20px 15px;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .bottom-navbar {
+
+        .bottom-nav {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 65px;
+            bottom: 0; left: 0; right: 0; height: 65px;
             background-color: #ffffff;
-            box-shadow: 0 -3px 10px rgba(0,0,0,0.08);
-            z-index: 1030;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 1030; border-top: 1px solid #e2e8f0;
         }
+
         .bottom-nav-link {
-            text-align: center;
-            color: #6c757d;
-            text-decoration: none;
-            font-size: 11px;
-            font-weight: 500;
-            transition: color 0.2s ease;
-            background: none;
-            border: none;
-            padding: 5px 0;
-            width: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #64748b; text-decoration: none; font-size: 0.75rem; font-weight: 500;
+            width: 100%; height: 100%; transition: all 0.2s;
         }
-        .bottom-nav-link i {
-            font-size: 20px;
-            display: block;
-            margin-bottom: 3px;
+
+        .bottom-nav-link i { font-size: 1.3rem; margin-bottom: 2px; }
+        .bottom-nav-link.active { color: var(--secondary); font-weight: 700; }
+
+        .card-panel {
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01); margin-bottom: 20px;
         }
-        .bottom-nav-link.active {
-            color: #0d6efd;
+
+        .card-panel-header {
+            padding: 16px 20px; border-bottom: 1px solid #f1f5f9;
+            font-weight: 700; color: var(--dark-slate);
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .disabled-view {
-            opacity: 0.4;
-            pointer-events: none;
-            user-select: none;
-        }
+
         #reader {
-            width: 100%;
-            max-width: 380px;
-            margin: 0 auto;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid #dee2e6;
-            background-color: #000;
+            width: 100%; max-width: 450px; margin: 0 auto;
+            border: 2px dashed #cbd5e1 !important; border-radius: 14px;
+            overflow: hidden; background: #000000;
         }
-        .table-rekap-wrapper {
-            overflow-x: auto;
-            max-height: 520px;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            background-color: white;
+
+        .disabled-view { opacity: 0.2; pointer-events: none; user-select: none; }
+        .scroll-area { max-height: 400px; overflow-y: auto; }
+
+        .table-recap-monthly { font-size: 0.75rem; text-align: center; }
+        .table-recap-monthly th, .table-recap-monthly td {
+            border: 1px solid #cbd5e1 !important; padding: 4px 6px !important; vertical-align: middle;
         }
-        .table-rekap-wrapper table {
-            margin-bottom: 0;
-            font-size: 13px;
-        }
-        .table-rekap-wrapper th {
-            position: sticky;
-            top: 0;
-            background-color: #f8f9fa;
-            z-index: 10;
-            text-align: center;
-            vertical-align: middle;
-            border-bottom: 2px solid #dee2e6;
-        }
-        .table-rekap-wrapper th.cell-name, 
-        .table-rekap-wrapper td.cell-name {
-            position: sticky;
-            left: 0;
-            background-color: #ffffff;
-            z-index: 11;
-            min-width: 170px;
-            max-width: 220px;
-            text-align: left;
-            border-right: 2px solid #dee2e6;
-        }
-        .table-rekap-wrapper th.cell-name {
-            background-color: #f8f9fa;
-            z-index: 12;
-        }
-        .cell-date {
-            min-width: 32px;
-            text-align: center;
-        }
-        .b-h { background-color: #d1e7dd !important; color: #0f5132; font-weight: bold; text-align: center; }
-        .b-i { background-color: #cff4fc !important; color: #055160; font-weight: bold; text-align: center; }
-        .b-s { background-color: #fff3cd !important; color: #664d03; font-weight: bold; text-align: center; }
-        .b-a { background-color: #f8d7da !important; color: #842029; font-weight: bold; text-align: center; }
+        .cell-date { min-width: 28px; font-weight: 600; }
+        .cell-name { text-align: left; min-width: 160px; font-weight: 600; background-color: #fff; position: sticky; left: 0; z-index: 1; }
         
-        #success-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0,0,0,0.75);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
+        .b-h { color: #10b981; font-weight: bold; }
+        .b-s { background-color: #fef08a; color: #a16207; font-weight: bold; }
+        .b-i { background-color: #e0f2fe; color: #0369a1; font-weight: bold; }
+        .b-a { background-color: #ffeeeb; color: #dc2626; font-weight: bold; }
+
+        .success-popup {
+            position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 10050; background: #ffffff; border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 3px solid var(--success);
+            min-width: 280px; animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        .success-anim-box {
-            background-color: white;
-            color: #333;
-            padding: 30px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            max-width: 90%;
-            width: 320px;
-        }
+        @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <!-- Overlay Notifikasi Pop-up Pemindaian Berhasil -->
-    <div id="success-overlay" class="d-none">
-        <div class="success-anim-box">
-            <i class="fa-solid fa-circle-check text-success mb-3" style="font-size: 60px;"></i>
-            <h4 class="fw-bold text-success mb-1">Berhasil Hadir</h4>
-            <p id="pop-nama-murid" class="fw-semibold text-secondary mb-0">Nama Murid</p>
+<nav class="navbar main-navbar sticky-top py-2 mb-3">
+    <div class="container-fluid px-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-1">
+        <div>
+            <span class="navbar-brand m-0 fw-bold text-white fs-5 d-block">
+                <i class="fa-solid fa-graduation-cap me-2"></i>EduScan <span class="fw-light">Pro v7.6</span>
+            </span>
+            <small class="text-white-50 fw-medium" id="web-header-tapel">Tahun Pelajaran: --/-- | --</small>
         </div>
+        <span id="current-menu-title" class="badge bg-white text-primary px-3 py-2 rounded-pill fw-bold align-self-end align-self-sm-center">Menu Absensi</span>
     </div>
+</nav>
 
-    <!-- Container Utama Header Atas -->
-    <div class="main-header mb-4">
-        <div class="container text-center">
-            <h2 class="fs-4 fw-bold mb-1"><i class="fa-solid fa-graduation-cap me-2"></i>SDN 1 GUNUNG MALANG</h2>
-            <p class="small mb-2 opacity-75">Sistem Pencatatan Gawai Kehadiran Terintegrasi QR Code</p>
-            <span id="web-header-tapel" class="badge bg-white text-dark border font-monospace py-1.5 px-3 small">Memuat data akademik...</span>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-11">
-                
-                <!-- MENU 1: FORM ABSENSI GURU & KAMERA LENSA -->
-                <section id="section-absensi" class="menu-section">
-                    <div class="card card-body shadow-sm border-0 mb-4">
-                        <h5 class="card-title fw-bold text-primary mb-3"><i class="fa-solid fa-user-tie me-2"></i>1. Identitas Mengajar Mandiri</h5>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold text-muted">Nama Guru / Pengajar</label>
-                                <input type="text" id="g-nama" class="form-control" placeholder="Contoh: Budi Santoso, S.Pd">
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold text-muted">Mata Pelajaran (Mapel)</label>
-                                <input type="text" id="g-mapel" class="form-control" placeholder="Contoh: Matematika / Tematik">
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold text-muted">Rombongan Belajar (Kelas)</label>
-                                <select id="g-kelas" class="form-select" onchange="tampilkanWaliKelasDiGuru(this.value)">
-                                    <option value="" selected disabled>-- Pilih Kelas --</option>
-                                    <option value="Kelas 1 SD">Kelas 1 SD</option>
-                                    <option value="Kelas 2 SD">Kelas 2 SD</option>
-                                    <option value="Kelas 3 SD">Kelas 3 SD</option>
-                                    <option value="Kelas 4 SD">Kelas 4 SD</option>
-                                    <option value="Kelas 5 SD">Kelas 5 SD</option>
-                                    <option value="Kelas 6 SD">Kelas 6 SD</option>
+<div class="container px-3">
+    
+    <div id="section-absensi" class="menu-section">
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="card card-panel">
+                    <div class="card-panel-header"><i class="fa-solid fa-chalkboard-user text-primary me-2"></i>Sesi Mengajar Guru</div>
+                    <div class="card-body p-3">
+                        <form id="form-guru">
+                            <div class="mb-2"><input type="text" id="g-nama" class="form-control" placeholder="Nama Guru" required></div>
+                            <div class="mb-2"><input type="text" id="g-mapel" class="form-control" placeholder="Mata Pelajaran" required></div>
+                            <div class="mb-2">
+                                <select id="g-kelas" class="form-select" onchange="tampilkanWaliKelasDiGuru(this.value)" required>
+                                    <option value="">-- Pilih Kelas Mengajar --</option>
+                                    <option value="Kelas 1 SD">Kelas 1 SD</option><option value="Kelas 2 SD">Kelas 2 SD</option>
+                                    <option value="Kelas 3 SD">Kelas 3 SD</option><option value="Kelas 4 SD">Kelas 4 SD</option>
+                                    <option value="Kelas 5 SD">Kelas 5 SD</option><option value="Kelas 6 SD">Kelas 6 SD</option>
                                 </select>
-                                <div id="g-wali-info" class="form-text text-primary font-monospace small px-1 mt-1"></div>
+                                <small id="g-wali-info" class="text-primary fw-semibold mt-1 d-block px-1"></small>
                             </div>
-                            <div class="col-6 col-md-6">
-                                <label class="form-label small fw-semibold text-muted">Tanggal Kegiatan</label>
-                                <input type="date" id="g-tanggal" class="form-control">
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><input type="date" id="g-tanggal" class="form-control" required></div>
+                                <div class="col-6"><input type="time" id="g-waktu" class="form-control" required></div>
                             </div>
-                            <div class="col-6 col-md-6">
-                                <label class="form-label small fw-semibold text-muted">Waktu Mulai</label>
-                                <input type="time" id="g-waktu" class="form-control">
-                            </div>
-                            <div class="col-12 text-end mt-3">
-                                <button type="button" id="btn-kunci-form" class="btn btn-primary px-4 fw-bold"><i class="fa-solid fa-lock me-2"></i>Kunci Ruang & Ambil Data Kelas</button>
-                                <button type="button" id="btn-reset-form" class="btn btn-danger px-4 fw-bold d-none"><i class="fa-solid fa-lock-open me-2"></i>Reset Ruang / Ganti Kelas</button>
-                            </div>
-                        </div>
+                            <button type="button" id="btn-kunci-form" class="btn btn-primary w-100 fw-bold py-2"><i class="fa-solid fa-lock me-1"></i> Kunci Sesi & Buka Kamera</button>
+                            <button type="button" id="btn-reset-form" class="btn btn-danger w-100 fw-bold py-2 d-none"><i class="fa-solid fa-lock-open me-1"></i> Reset Sesi / Tutup Kamera</button>
+                        </form>
                     </div>
-
-                    <!-- Kotak Scanner Kamera -->
-                    <div id="wrapper-kamera" class="card card-body shadow-sm border-0 mb-4 disabled-view">
-                        <h5 class="card-title fw-bold text-primary mb-2"><i class="fa-solid fa-camera-retro me-2"></i>2. Scanner QR Code Lensa</h5>
-                        <p class="text-muted small mb-3">Arahkan kode QR kartu siswa tepat ke dalam kotak lensa kamera di bawah ini.</p>
-                        
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div id="wrapper-kamera" class="card card-panel disabled-view">
+                    <div class="card-panel-header text-success"><span><i class="fa-solid fa-camera me-2"></i>Kamera Pemindai HP</span></div>
+                    <div class="card-body p-3 text-center">
                         <div id="reader"></div>
-                        <div id="scan-feedback" class="alert alert-secondary mt-3 mb-0 py-2 text-center small">Kamera dinonaktifkan. Selesaikan instruksi langkah 1 diatas dahulu.</div>
+                        <div id="scan-feedback" class="alert alert-secondary mt-2 mb-0 py-2 small fw-semibold">Silahkan kunci sesi mengajar terlebih dahulu.</div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <!-- Tabel Absensi Hari Ini -->
-                    <div class="card card-body shadow-sm border-0 mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title fw-bold text-primary mb-0"><i class="fa-solid fa-list-check me-2"></i>3. Log Kehadiran Realtime (<span id="info-badge-kelas" class="badge bg-secondary rounded-pill">Belum Ada</span>)</h5>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped align-middle" style="font-size: 14px;">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Identitas Siswa</th>
-                                        <th style="width: 150px;">Aksi Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabel-rekap-absensi-guru">
-                                    <tr>
-                                        <td colspan="2" class="text-center text-muted py-4">Belum ada kelas aktif yang dikunci.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
+    <div id="section-rekap-hari-ini" class="menu-section d-none">
+        <div class="card card-panel">
+            <div class="card-panel-header">
+                <span><i class="fa-solid fa-list-check text-primary me-2"></i>Presensi Kehadiran Hari Ini</span>
+                <span id="info-badge-kelas" class="badge bg-secondary rounded-pill">Tidak Ada Sesi</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive p-2">
+                    <table class="table table-hover align-middle m-0 small">
+                        <thead class="table-light"><tr><th>Nama Siswa (A-Z)</th><th width="130">Status</th></tr></thead>
+                        <tbody id="tabel-rekap-absensi-guru">
+                            <tr><td colspan="2" class="text-center text-muted py-4">Belum ada kelas aktif yang dikunci.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-3 bg-light border-top">
+                    <button id="btn-download-pdf-guru" class="btn btn-success w-100 fw-bold py-2" disabled><i class="fa-solid fa-file-pdf me-1"></i> Download Laporan Hari Ini (PDF)</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- MENU 2: REKAP KELAS BULANAN (DASHBOARD GURU) -->
-                <section id="section-rekap-hari-ini" class="menu-section d-none">
-                    <div class="card card-body shadow-sm border-0 mb-4">
-                        <h5 class="card-title fw-bold text-primary mb-3"><i class="fa-solid fa-chart-line me-2"></i>Filter Riwayat Master Bulanan</h5>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-5">
-                                <label class="form-label small fw-semibold text-muted">Pilih Kelas</label>
-                                <select id="rekap-bulan-kelas" class="form-select" onchange="renderMasterRekapBulanan()">
-                                    <option value="Kelas 1 SD">Kelas 1 SD</option>
-                                    <option value="Kelas 2 SD" selected>Kelas 2 SD</option>
-                                    <option value="Kelas 3 SD">Kelas 3 SD</option>
-                                    <option value="Kelas 4 SD">Kelas 4 SD</option>
-                                    <option value="Kelas 5 SD">Kelas 5 SD</option>
-                                    <option value="Kelas 6 SD">Kelas 6 SD</option>
+    <div id="section-admin" class="menu-section d-none">
+        <div id="admin-login-box" class="row justify-content-center pt-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-panel p-4 text-center">
+                    <i class="fa-solid fa-user-shield text-primary mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="fw-bold text-dark mb-3">Login Otentikasi Admin</h5>
+                    <input type="password" id="admin-pass-input" class="form-control text-center mb-3" placeholder="Sandi Admin">
+                    <button type="button" class="btn btn-dark w-100 fw-bold" onclick="prosesLoginAdmin()">Masuk Panel</button>
+                    <small class="text-muted d-block mt-2">Sandi default: <b>admin123</b></small>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-main-content" class="d-none">
+            <ul class="nav nav-pills nav-justified mb-3" id="adminTab">
+                <li class="nav-item"><button class="nav-link active fw-semibold py-2" data-bs-toggle="pill" data-bs-target="#tab-adm-murid">Kelola Siswa & Lembaga</button></li>
+                <li class="nav-item"><button class="nav-link fw-semibold py-2" data-bs-toggle="pill" data-bs-target="#tab-adm-rekap" onclick="renderMasterRekapBulanan()">Rekap Bulanan</button></li>
+                <li class="nav-item"><button class="nav-link fw-semibold py-2 position-relative" data-bs-toggle="pill" data-bs-target="#tab-adm-sampah" onclick="renderMenuSampahAdmin()"><i class="fa-solid fa-trash-can me-1"></i> Sampah <span id="badge-jumlah-sampah" class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">0</span></button></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="tab-adm-murid">
+                    <div class="card card-panel p-3 bg-body-tertiary">
+                        <span class="fw-bold text-dark small mb-2 d-block"><i class="fa-solid fa-school text-primary me-1"></i> Pengaturan Sinkronisasi Data Sekolah</span>
+                        <div class="row g-2 mb-2">
+                            <div class="col-sm-6">
+                                <label class="small fw-bold text-secondary">Tahun Pelajaran</label>
+                                <input type="text" id="adm-sch-tapel" class="form-control form-control-sm" value="2025/2026" onchange="simpanAsetLembaga()">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="small fw-bold text-secondary">Semester Aktif</label>
+                                <select id="adm-sch-semester" class="form-select form-select-sm" onchange="simpanAsetLembaga()">
+                                    <option value="Semester Ganjil">Semester Ganjil</option>
+                                    <option value="Semester Genap">Semester Genap</option>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-5">
-                                <label class="form-label small fw-semibold text-muted">Pilih Periode Bulan</label>
-                                <select id="rekap-bulan-periode" class="form-select" onchange="renderMasterRekapBulanan()">
-                                    <!-- Diisi otomatis via JavaScript -->
+                        </div>
+                        <div class="row g-2 border-top pt-2">
+                            <div class="col-sm-4">
+                                <select id="adm-wali-kelas-select" class="form-select form-select-sm" onchange="loadNamaWaliKelasKeInput()">
+                                    <option value="Kelas 1 SD">Kelas 1 SD</option><option value="Kelas 2 SD">Kelas 2 SD</option>
+                                    <option value="Kelas 3 SD">Kelas 3 SD</option><option value="Kelas 4 SD">Kelas 4 SD</option>
+                                    <option value="Kelas 5 SD">Kelas 5 SD</option><option value="Kelas 6 SD">Kelas 6 SD</option>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-success w-100 fw-bold" onclick="renderMasterRekapBulanan()"><i class="fa-solid fa-arrows-rotate me-1"></i> Muat</button>
+                            <div class="col-sm-5">
+                                <input type="text" id="adm-wali-nama-input" class="form-control form-control-sm" placeholder="Nama Wali Kelas">
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" class="btn btn-dark btn-sm w-100 fw-bold" onclick="simpanWaliKelasAdmin()">Simpan Wali</button>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card card-body shadow-sm border-0 mb-4">
-                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                            <h5 class="card-title fw-bold text-dark mb-0"><i class="fa-solid fa-table me-2"></i>Matriks Rekap Buku Presensi Siswa</h5>
-                            <button type="button" id="btn-download-pdf-guru" class="btn btn-sm btn-danger fw-bold py-1.5 px-3" onclick="downloadPDFBulananAdmin()"><i class="fa-solid fa-file-pdf me-2"></i>Ekspor Laporan PDF</button>
+                    <div class="card card-panel">
+                        <div class="card-header bg-white p-2 border-bottom-0">
+                            <nav class="nav nav-tabs card-header-tabs" id="subTabInputSiswa">
+                                <button class="nav-link active fw-bold text-xs" data-bs-toggle="tab" data-bs-target="#panel-input-manual">➕ Tambah Murid Manual</button>
+                                <button class="nav-link fw-bold text-xs text-success" data-bs-toggle="tab" data-bs-target="#panel-input-excel"><i class="fa-solid fa-file-excel me-1"></i> Upload Massal Via Excel</button>
+                            </nav>
                         </div>
-                        
-                        <div class="table-rekap-wrapper">
-                            <table class="table table-bordered align-middle">
-                                <thead>
-                                    <tr id="rekap-bulan-thead-hari">
-                                        <!-- Header hari diisi otomatis oleh JS -->
-                                    </tr>
-                                </thead>
-                                <tbody id="rekap-bulan-tbody-murid">
-                                    <!-- Baris data diisi otomatis oleh JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="mt-3">
-                            <span class="badge b-h px-2 py-1 me-1">H = Hadir</span>
-                            <span class="badge b-i px-2 py-1 me-1">I = Izin</span>
-                            <span class="badge b-s px-2 py-1 me-1">S = Sakit</span>
-                            <span class="badge b-a px-2 py-1">A = Alpha</span>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- MENU 3: PANEL CONTROL ADMIN -->
-                <section id="section-admin" class="menu-section d-none">
-                    <!-- Box Gerbang Login Sandi Admin -->
-                    <div id="admin-login-box" class="card card-body shadow-sm border-0 text-center py-5 mx-auto mb-4" style="max-width: 420px;">
-                        <i class="fa-solid fa-shield-halved text-primary mb-3" style="font-size: 50px;"></i>
-                        <h4 class="fw-bold mb-1">Otentikasi Kunci Admin</h4>
-                        <p class="text-muted small mb-4">Halaman ini dilindungi sandi pertahanan enkripsi.</p>
-                        <div class="mb-3">
-                            <input type="password" id="admin-pass-input" class="form-control text-center" placeholder="Masukkan Sandi Admin">
-                        </div>
-                        <button type="button" class="btn btn-primary w-100 fw-bold" onclick="prosesLoginAdmin()">Buka Akses Kontrol</button>
-                    </div>
-
-                    <!-- Isi Panel Manajemen Admin (Terbuka Jika Password Benar) -->
-                    <div id="admin-main-content" class="d-none">
-                        <!-- Konfigurasi Aset Lembaga -->
-                        <div class="card card-body shadow-sm border-0 mb-4">
-                            <h5 class="card-title fw-bold text-danger mb-3"><i class="fa-solid fa-sliders me-2"></i>1. Parameter Identitas & Kalender Akademik</h5>
-                            <div class="row g-3">
-                                <div class="col-6 col-md-6">
-                                    <label class="form-label small fw-semibold text-muted">Tahun Pelajaran (Tapel)</label>
-                                    <input type="text" id="adm-sch-tapel" class="form-control" placeholder="Contoh: 2025/2026">
-                                </div>
-                                <div class="col-6 col-md-6">
-                                    <label class="form-label small fw-semibold text-muted">Semester Berjalan</label>
-                                    <select id="adm-sch-semester" class="form-select">
-                                        <option value="Semester Ganjil">Semester Ganjil</option>
-                                        <option value="Semester Genap">Semester Genap</option>
-                                    </select>
-                                </div>
-                                <div class="col-12 text-end">
-                                    <button type="button" class="btn btn-sm btn-dark px-3 fw-bold" onclick="simpanAsetLembaga()"><i class="fa-solid fa-floppy-disk me-1"></i> Simpan Parameter</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Pengaturan Wali Kelas -->
-                        <div class="card card-body shadow-sm border-0 mb-4">
-                            <h5 class="card-title fw-bold text-danger mb-3"><i class="fa-solid fa-chalkboard-user me-2"></i>2. Pemetaan & SK Wali Kelas</h5>
-                            <div class="row g-3">
-                                <div class="col-12 col-md-4">
-                                    <label class="form-label small fw-semibold text-muted">Pilih Kelas</label>
-                                    <select id="adm-wali-kelas-select" class="form-select" onchange="loadNamaWaliKelasKeInput()">
-                                        <option value="Kelas 1 SD">Kelas 1 SD</option>
-                                        <option value="Kelas 2 SD" selected>Kelas 2 SD</option>
-                                        <option value="Kelas 3 SD">Kelas 3 SD</option>
-                                        <option value="Kelas 4 SD">Kelas 4 SD</option>
-                                        <option value="Kelas 5 SD">Kelas 5 SD</option>
-                                        <option value="Kelas 6 SD">Kelas 6 SD</option>
-                                    </select>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label class="form-label small fw-semibold text-muted">Nama Guru Wali Kelas (Lengkap + Gelar)</label>
-                                    <input type="text" id="adm-wali-nama-input" class="form-control" placeholder="Contoh: Nursyamsiyah Yuliantari, S.Pd">
-                                </div>
-                                <div class="col-12 col-md-2 d-flex align-items-end">
-                                    <button type="button" class="btn btn-primary w-100 fw-bold" onclick="simpanWaliKelasAdmin()"><i class="fa-solid fa-check me-1"></i> Update</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Pendaftaran Siswa Baru & Impor Excel Masal -->
-                        <div class="card card-body shadow-sm border-0 mb-4">
-                            <h5 class="card-title fw-bold text-danger mb-3"><i class="fa-solid fa-user-plus me-2"></i>3. Input Siswa Baru & Unggah Berkas Excel</h5>
-                            
-                            <!-- Nav Tabs untuk Metode Input -->
-                            <ul class="nav nav-tabs mb-3" id="tabInputSiswa" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active fw-bold small" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-pane" type="button" role="tab"><i class="fa-solid fa-keyboard me-1"></i> Input Manual</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link fw-bold small" id="excel-tab" data-bs-toggle="tab" data-bs-target="#excel-pane" type="button" role="tab"><i class="fa-solid fa-file-excel text-success me-1"></i> Impor Berkas Massal</button>
-                                </li>
-                            </ul>
-
-                            <div class="tab-content" id="tabInputSiswaContent">
-                                <!-- Tab Manual -->
-                                <div class="tab-pane fade show active" id="manual-pane" role="tabpanel">
-                                    <form id="form-tambah-murid-admin">
-                                        <div class="row g-2">
-                                            <div class="col-12 col-md-2">
-                                                <input type="text" id="adm-m-nisn" class="form-control form-control-sm" placeholder="NISN / NIS" required>
-                                            </div>
-                                            <div class="col-12 col-md-4">
-                                                <input type="text" id="adm-m-nama" class="form-control form-control-sm" placeholder="Nama Lengkap Siswa" required>
-                                            </div>
-                                            <div class="col-6 col-md-2">
-                                                <select id="adm-m-kelas" class="form-select form-select-sm" required>
-                                                    <option value="Kelas 1 SD">Kelas 1 SD</option>
-                                                    <option value="Kelas 2 SD" selected>Kelas 2 SD</option>
-                                                    <option value="Kelas 3 SD">Kelas 3 SD</option>
-                                                    <option value="Kelas 4 SD">Kelas 4 SD</option>
-                                                    <option value="Kelas 5 SD">Kelas 5 SD</option>
-                                                    <option value="Kelas 6 SD">Kelas 6 SD</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-6 col-md-2">
-                                                <select id="adm-m-jk" class="form-select form-select-sm" required>
-                                                    <option value="" disabled selected>JK</option>
-                                                    <option value="L">Laki-laki</option>
-                                                    <option value="P">Perempuan</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-12 col-md-2">
-                                                <input type="text" id="adm-m-alamat" class="form-control form-control-sm" placeholder="Dusun / Alamat" required>
-                                            </div>
-                                            <div class="col-12 text-end mt-2">
-                                                <button type="submit" class="btn btn-sm btn-success px-4 fw-bold"><i class="fa-solid fa-plus me-1"></i> Tambahkan Siswa</button>
-                                            </div>
+                        <div class="card-body p-3 bg-light-subtle tab-content border border-top-0 rounded-bottom-4">
+                            <div class="tab-pane fade show active" id="panel-input-manual">
+                                <form id="form-tambah-murid-admin">
+                                    <div class="row g-2">
+                                        <div class="col-md-3">
+                                            <select id="adm-m-kelas" class="form-select form-select-sm" required>
+                                                <option value="Kelas 1 SD">Kelas 1 SD</option><option value="Kelas 2 SD">Kelas 2 SD</option>
+                                                <option value="Kelas 3 SD">Kelas 3 SD</option><option value="Kelas 4 SD">Kelas 4 SD</option>
+                                                <option value="Kelas 5 SD">Kelas 5 SD</option><option value="Kelas 6 SD">Kelas 6 SD</option>
+                                            </select>
                                         </div>
-                                    </form>
-                                </div>
-                                
-                                <!-- Tab Excel -->
-                                <div class="tab-pane fade" id="excel-pane" role="tabpanel">
-                                    <div class="bg-light p-3 border rounded">
-                                        <p class="small text-muted mb-2">Sistem mendukung unggah file berformat <b>.xlsx, .xls, atau .csv</b>. Pastikan tabel memiliki nama kolom: <code>Nama</code>, <code>NISN</code>, <code>JK</code> (Isi L/P), dan <code>Alamat</code>.</p>
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-12 col-md-4">
-                                                <select id="adm-excel-kelas-tujuan" class="form-select form-select-sm">
-                                                    <option value="Kelas 1 SD">Kelas 1 SD</option>
-                                                    <option value="Kelas 2 SD" selected>Kelas 2 SD</option>
-                                                    <option value="Kelas 3 SD">Kelas 3 SD</option>
-                                                    <option value="Kelas 4 SD">Kelas 4 SD</option>
-                                                    <option value="Kelas 5 SD">Kelas 5 SD</option>
-                                                    <option value="Kelas 6 SD">Kelas 6 SD</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-12 col-md-5">
-                                                <input type="file" id="adm-excel-file-input" class="form-control form-control-sm" accept=".xlsx, .xls, .csv">
-                                            </div>
-                                            <div class="col-12 col-md-3">
-                                                <button type="button" class="btn btn-sm btn-success w-100 fw-bold" onclick="prosesUploadExcelMassal()"><i class="fa-solid fa-cloud-arrow-up me-1"></i> Proses Impor</button>
-                                            </div>
+                                        <div class="col-md-3"><input type="text" id="adm-m-nisn" class="form-control form-control-sm" placeholder="NIS/NISN" required></div>
+                                        <div class="col-md-4"><input type="text" id="adm-m-nama" class="form-control form-control-sm" placeholder="Nama Lengkap" required></div>
+                                        <div class="col-md-2">
+                                            <select id="adm-m-jk" class="form-select form-select-sm" required>
+                                                <option value="">L/P</option>
+                                                <option value="L">L (Laki-laki)</option>
+                                                <option value="P">P (Perempuan)</option>
+                                            </select>
                                         </div>
                                     </div>
+                                    <div class="row g-2 mt-2">
+                                        <div class="col-12">
+                                            <input type="text" id="adm-m-alamat" class="form-control form-control-sm" placeholder="Alamat Rumah Lengkap Siswa" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 mt-2 fw-semibold py-2">Simpan Murid & Buat QR</button>
+                                </form>
+                            </div>
+
+                            <div class="tab-pane fade" id="panel-input-excel">
+                                <div class="p-2 border rounded bg-white">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-4">
+                                            <label class="small fw-bold text-muted mb-1 d-block">1. Pilih Tujuan Kelas:</label>
+                                            <select id="adm-excel-kelas-tujuan" class="form-select form-select-sm">
+                                                <option value="Kelas 1 SD">Kelas 1 SD</option><option value="Kelas 2 SD">Kelas 2 SD</option>
+                                                <option value="Kelas 3 SD">Kelas 3 SD</option><option value="Kelas 4 SD">Kelas 4 SD</option>
+                                                <option value="Kelas 5 SD">Kelas 5 SD</option><option value="Kelas 6 SD">Kelas 6 SD</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="small fw-bold text-muted mb-1 d-block">2. Pilih File Excel / CSV (.xlsx, .xls, .csv):</label>
+                                            <input type="file" id="adm-excel-file-input" class="form-control form-control-sm" accept=".xlsx, .xls, .csv">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 bg-light p-2 rounded border style-text small">
+                                        <b class="text-dark"><i class="fa-solid fa-circle-info text-primary me-1"></i> Aturan Judul Kolom Excel:</b>
+                                        <p class="m-0 text-muted mt-1" style="font-size:0.75rem;">Sistem membaca nama kolom secara fleksibel. Pastikan lembar kerja Anda mempunyai header nama: <b>Nama / Nama Siswa</b>, <b>NISN / NIS</b>, <b>JK / L/P</b>, dan <b>Alamat</b>.</p>
+                                    </div>
+                                    <button type="button" class="btn btn-success btn-sm w-100 mt-2 fw-bold py-2" onclick="prosesUploadExcelMassal()"><i class="fa-solid fa-file-import me-1"></i> Mulai Impor Siswa Satu Kelas</button>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Manajer Rombel Aktif & Pembuat QR Kartu Pelajar -->
-                        <div class="card card-body shadow-sm border-0 mb-4">
-                            <h5 class="card-title fw-bold text-danger mb-3"><i class="fa-solid fa-users me-2"></i>4. Manajer Database Rombel Terdaftar</h5>
-                            
-                            <div class="row g-3 mb-3">
-                                <div class="col-12 col-md-6">
-                                    <select id="adm-filter-kelas" class="form-select fw-bold border-dark" onchange="renderTabelMuridAdmin()">
-                                        <option value="Kelas 1 SD">Daftar Murid: Kelas 1 SD</option>
-                                        <option value="Kelas 2 SD" selected>Daftar Murid: Kelas 2 SD</option>
-                                        <option value="Kelas 3 SD">Daftar Murid: Kelas 3 SD</option>
-                                        <option value="Kelas 4 SD">Daftar Murid: Kelas 4 SD</option>
-                                        <option value="Kelas 5 SD">Daftar Murid: Kelas 5 SD</option>
-                                        <option value="Kelas 6 SD">Daftar Murid: Kelas 6 SD</option>
+                    <div class="card card-panel">
+                        <div class="card-panel-header flex-wrap gap-2">
+                            <div>
+                                <span><i class="fa-solid fa-database text-primary me-2"></i>Data Murid (Urut Abjad)</span>
+                                <div class="small text-muted fw-normal mt-1" id="adm-info-wali-tabel">Wali Kelas: -</div>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center ms-auto flex-wrap">
+                                <button type="button" class="btn btn-sm btn-success fw-bold px-2" onclick="unduhMassalQRPerKelas()" title="Unduh Semua QR Code Kelas Ini (.ZIP)">
+                                    <i class="fa-solid fa-file-zipper me-1"></i> ⚡ Unduh Semua QR (ZIP)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger fw-bold px-2" onclick="pindahkanSatuKelasSiswaKeSampah()" title="Pindahkan Semua Siswa Kelas Ini ke Sampah">
+                                    <i class="fa-solid fa-trash-can-arrow-up me-1"></i> Kosongkan Kelas
+                                </button>
+                                <select id="adm-filter-kelas" class="form-select form-select-sm" style="width: 140px;" onchange="renderTabelMuridAdmin()">
+                                    <option value="Kelas 1 SD">Kelas 1 SD</option><option value="Kelas 2 SD">Kelas 2 SD</option>
+                                    <option value="Kelas 3 SD">Kelas 3 SD</option><option value="Kelas 4 SD">Kelas 4 SD</option>
+                                    <option value="Kelas 5 SD">Kelas 5 SD</option><option value="Kelas 6 SD">Kelas 6 SD</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="scroll-area p-2">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle m-0 small" style="min-width: 600px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="60">No</th>
+                                                <th>Nama / NISN</th>
+                                                <th>L/P</th>
+                                                <th>Alamat</th>
+                                                <th class="text-end" width="120">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="adm-tabel-murid"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="qr-hidden-generator" style="display: none; visibility: hidden;"></div>
+
+                    <div id="qr-preview-area" class="text-center p-3 bg-white border card-panel d-none">
+                        <h6 id="qr-preview-name" class="fw-bold text-dark m-0"></h6>
+                        <div id="qrcode" class="my-3 d-flex justify-content-center"></div>
+                        <button id="btn-download-qr" class="btn btn-dark btn-sm px-4"><i class="fa-solid fa-download me-1"></i> Unduh QR</button>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-adm-rekap">
+                    <div class="card card-panel">
+                        <div class="card-panel-header flex-wrap gap-2">
+                            <div><i class="fa-solid fa-calendar-days text-primary me-2"></i><b>Matriks Rekap Absensi Bulanan Siswa</b></div>
+                        </div>
+                        <div class="card-body p-3 bg-light-subtle">
+                            <div class="row g-2 mb-3 align-items-center">
+                                <div class="col-md-3">
+                                    <select id="rekap-bulan-kelas" class="form-select form-select-sm" onchange="renderMasterRekapBulanan()">
+                                        <option value="Kelas 1 SD">Kelas 1 SD</option><option value="Kelas 2 SD">Kelas 2 SD</option>
+                                        <option value="Kelas 3 SD">Kelas 3 SD</option><option value="Kelas 4 SD">Kelas 4 SD</option>
+                                        <option value="Kelas 5 SD">Kelas 5 SD</option><option value="Kelas 6 SD">Kelas 6 SD</option>
                                     </select>
-                                    <div id="adm-info-wali-tabel" class="form-text text-secondary px-1 fw-semibold font-monospace mt-1">Wali Kelas: -</div>
                                 </div>
-                                <div class="col-12 col-md-6 text-md-end d-flex gap-2 justify-content-md-end align-items-start">
-                                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold" onclick="unduhMassalQRPerKelas()"><i class="fa-solid fa-file-zipper me-1"></i> Unduh Massal QR (.ZIP)</button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger fw-bold" onclick="pindahkanSatuKelasSiswaKeSampah()"><i class="fa-solid fa-users-slash me-1"></i> Kosongkan Kelas</button>
+                                <div class="col-md-3">
+                                    <select id="rekap-bulan-periode" class="form-select form-select-sm" onchange="renderMasterRekapBulanan()">
+                                    </select>
                                 </div>
-                            </div>
-
-                            <!-- Preview QR code Individual -->
-                            <div id="qr-preview-area" class="alert alert-light border d-flex align-items-center gap-3 p-3 mb-3 d-none">
-                                <div id="qrcode" class="bg-white p-2 border rounded"></div>
-                                <div>
-                                    <span class="small text-muted d-block font-monospace">PREVIEW INDIVIDUAL QR:</span>
-                                    <h5 id="qr-preview-name" class="fw-bold text-primary mb-2">Nama Siswa</h5>
-                                    <button type="button" id="btn-download-qr" class="btn btn-xs btn-dark py-1 px-2.5 small fw-bold"><i class="fa-solid fa-download me-1"></i> Simpan Gambar PNG</button>
+                                <div class="col-md-3">
+                                    <button class="btn btn-danger btn-sm w-100 fw-semibold text-truncate" onclick="pindahkanBulanTerpilihKeSampah()"><i class="fa-solid fa-trash-can me-1"></i> Hapus Rekap Bulan Ini</button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-success btn-sm w-100 fw-bold text-truncate" onclick="downloadPDFBulananAdmin()"><i class="fa-solid fa-file-export me-1"></i> Cetak Template (PDF)</button>
                                 </div>
                             </div>
 
-                            <div class="table-responsive" style="max-height: 400px; border: 1px solid #dee2e6; border-radius: 6px;">
-                                <table class="table table-sm table-bordered table-striped align-middle mb-0" style="font-size: 13.5px;">
-                                    <thead class="table-dark sticky-top">
-                                        <tr>
-                                            <th style="width: 50px;">No</th>
-                                            <th>Nama Lengkap & Kode NISN</th>
-                                            <th style="width: 55px;">L/P</th>
-                                            <th>Alamat</th>
-                                            <th style="width: 130px;" class="text-end">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="adm-tabel-murid">
-                                        <!-- Diisi via Javascript -->
-                                    </tbody>
+                            <div class="table-responsive border rounded-3 bg-white shadow-sm" style="max-height: 450px;">
+                                <table class="table table-sm table-recap-monthly m-0">
+                                    <thead class="table-dark sticky-top"><tr id="rekap-bulan-thead-hari"></tr></thead>
+                                    <tbody id="rekap-bulan-tbody-murid"></tbody>
                                 </table>
                             </div>
-                        </div>
-
-                        <!-- Gudang Pembuangan & Tempat Pemulihan Sampah (Recycle Bin) -->
-                        <div class="card card-body shadow-sm border-0 mb-4 border-start border-danger border-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="card-title fw-bold text-danger mb-0"><i class="fa-solid fa-trash-can me-2"></i>5. Kotak Sampah & Log Backup Recovery</h5>
-                                <button type="button" class="btn btn-sm btn-danger fw-bold py-1 px-2.5" onclick="kosongkanSemuaSampahPermanen()"><i class="fa-solid fa-dumpster-fire me-1"></i> Kosongkan Semua</button>
-                            </div>
-                            <p class="text-muted small mb-3">Tabel pemulihan untuk mengembalikan data rekap absensi atau data siswa masal yang terhapus tidak sengaja.</p>
                             
-                            <div class="table-responsive" style="max-height: 250px;">
-                                <table class="table table-bordered table-sm align-middle mb-0" style="font-size: 13px;">
+                            <div class="mt-3 p-2 bg-white border rounded d-flex flex-wrap gap-3 justify-content-center small font-medium">
+                                <span><b class="text-success">H</b>: Hadir</span>
+                                <span><span class="px-1 b-s rounded">S</span>: Sakit</span>
+                                <span><span class="px-1 b-i rounded">I</span>: Izin</span>
+                                <span><span class="px-1 b-a rounded">A</span>: Alpha</span>
+                                <span><b class="text-secondary">-</b>: Belum Ada Data</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-adm-sampah">
+                    <div class="card card-panel">
+                        <div class="card-panel-header flex-wrap gap-2">
+                            <span><i class="fa-solid fa-trash-can text-danger me-2"></i><b>Folder Sampah Rekap Absensi & Data Siswa (Backup)</b></span>
+                            <button class="btn btn-dark btn-sm fw-bold" onclick="kosongkanSemuaSampahPermanen()"><i class="fa-solid fa-dumpster-fire me-1"></i> Kosongkan Semua Sampah</button>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="alert alert-info py-2 small mb-3"><i class="fa-solid fa-circle-info me-1"></i> Semua data absensi bulanan atau data siswa kelas yang dihapus dicadangkan di bawah ini. Anda dapat memulihkannya kembali atau menghapusnya secara permanen.</div>
+                            <div class="table-responsive border rounded-3 bg-white shadow-sm">
+                                <table class="table table-hover align-middle m-0 small">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Nama Dokumen Cadangan</th>
-                                            <th>Asal Rombel</th>
-                                            <th class="text-end" style="width: 220px;">Aksi Pemulihan</th>
+                                            <th>Jenis Data / Periode</th>
+                                            <th>Target Kelas</th>
+                                            <th class="text-end" width="220">Aksi Pengelolaan</th>
                                         </tr>
                                     </thead>
                                     <tbody id="sampah-tbody-list">
-                                        <!-- Diisi otomatis oleh JavaScript -->
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-
-                        <!-- Menu Danger Zone Khusus Penghancuran Data Akut -->
-                        <div class="card card-body shadow-sm border-0 border-start border-dark border-3 mb-4 bg-light">
-                            <h5 class="card-title fw-bold text-dark mb-2"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>6. Zona Bahaya Sistem (Danger Zone)</h5>
-                            <p class="text-muted small mb-3">Tindakan di bawah ini bersifat merusak sistem penyimpanan lokal secara total. Harap berhati-hati sebelum menekan tombol.</p>
-                            <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" onclick="pindahkanBulanTerpilihKeSampah()"><i class="fa-solid fa-folder-minus me-1"></i> Hapus Rekap Bulan Ini Ke Sampah</button>
-                                <button type="button" class="btn btn-sm btn-danger fw-bold" onclick="if(confirm('Apakah Anda yakin ingin menghapus TOTAL seluruh rekap bulanan di browser ini? data tidak bisa dikembalikan.')){ localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify({})); alert('Seluruh rekap bulanan dibersihkan.'); renderMasterRekapBulanan(); }"><i class="fa-solid fa-radiation me-1"></i> Bersihkan Seluruh Rekap Bulanan</button>
-                                <button type="button" class="btn btn-sm btn-dark fw-bold" onclick="if(confirm('KEMBALIKAN SISTEM KE SETTINGAN AWAL PABRIKAN?\n\nSemua data siswa kustom baru dan seluruh absensi bulanan akan di-Riset Total.')){ localStorage.clear(); location.reload(); }"><i class="fa-solid fa-rotate me-1"></i> Reset Pabrik Total Aplikasi</button>
-                            </div>
-                        </div>
-
                     </div>
-                </section>
+                </div>
 
             </div>
         </div>
     </div>
+</div>
 
-    <!-- MODAL POPUP EDIT DATA SISWA INDIVIDUAL -->
-    <div class="modal fade" id="modalEditMurid" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-pen me-2"></i>Ubah Profil Siswa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="edit-old-kelas">
-                    <input type="hidden" id="edit-old-nisn">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Nama Lengkap Siswa</label>
-                        <input type="text" id="edit-m-nama" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Nomor Induk / NISN</label>
-                        <input type="text" id="edit-m-nisn" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Jenis Kelamin</label>
-                        <select id="edit-m-jk" class="form-select">
-                            <option value="L">Laki-laki</option>
-                            <option value="P">Perempuan</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Alamat Rumah / Dusun</label>
-                        <input type="text" id="edit-m-alamat" class="form-control">
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-semibold btn-sm px-3" data-bs-dismiss="modal">Batalkan</button>
-                    <button type="button" class="btn btn-warning fw-bold btn-sm px-4" onclick="simpanPerubahanMuridAdmin()">Simpan Pembaruan</button>
-                </div>
+<div class="modal fade" id="modalEditMurid" tabindex="-1" aria-hidden="true" style="z-index: 10060;">
+    <div class="modal-dialog modal-dialog-centered px-3">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold text-dark"><i class="fa-solid fa-user-pen text-warning me-2"></i>Ubah Data Informasi Murid</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </div>
-    </div>
-
-    <!-- Wadah Virtual Tersembunyi untuk Proses Ekspor JSZip QR -->
-    <div id="qr-hidden-generator" class="d-none"></div>
-
-    <!-- NAVIGASI BOTTON MENU NAVBAR UTAMA (MOBILE FRIENDLY) -->
-    <nav class="bottom-navbar">
-        <button type="button" class="bottom-nav-link active" onclick="gantiMenu('absensi', this)">
-            <i class="fa-solid fa-qrcode"></i>Absensi Scan
-        </button>
-        <button type="button" class="bottom-nav-link" onclick="gantiMenu('rekap-hari-ini', this); renderMasterRekapBulanan();">
-            <i class="fa-solid fa-file-invoice"></i>Rekap Buku
-        </button>
-        <button type="button" class="bottom-nav-link" onclick="gantiMenu('admin', this); renderMenuSampahAdmin();">
-            <i class="fa-solid fa-gears"></i><span class="position-relative">Admin <span id="badge-jumlah-sampah" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:9px; padding:2px 5px;">0</span></span>
-        </button>
-    </nav>
-
-    <!-- PUSTAKA JS JAVASCRIPT PIHAK KETIGA (CDN BUNDLE) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-    <!-- LOGIKA CORE UTAMA JAVASCRIPT APLIKASI -->
-    <script>
-    const defaultDB = {
-        "Kelas 1 SD": [{ nisn: "3199826535", nama: "ALFAREZI KAVINDRA AIWIN", kelas: "Kelas 1 SD", jk: "L", alamat: "Gunung Malang" }],
-        "Kelas 2 SD": [
-            { nisn: "3184560525", nama: "AHMAD KURNIAWAN", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3199826535", nama: "ALFAREZI KAVINDRA AIWIN", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3182393855", nama: "ANNISA RAHMAWATI", kelas: "Kelas 2 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3183588984", nama: "BILQIS ADZKIA REVALINA", kelas: "Kelas 2 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3181829676", nama: "FADIL AHMAD RAMADHAN", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3185563333", nama: "IFAN MAULANA", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3185367657", nama: "IQBAL DWI ARDIANSYAH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3181467439", nama: "M. GAVIN SAMSUL", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3181089391", nama: "MOH. RAFIF FAIZ AL AMIYAH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3183468327", nama: "MOH. REFAN HAIRULLAH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3186704479", nama: "MUHAMMAD AZKA SHAKIL FAHREZA", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3173039142", nama: "MUHAMMAD CATUR AL FATIH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3187977896", nama: "MUHAMMAD RIFQI RHOMADHONY", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3184197679", nama: "MUHAMMAD SARIF ABDULLAH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3189948564", nama: "MUHAMMAD SYAUQI ILAL HABIB", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3196332229", nama: "NAFLA SYAQIRA KAMILA", kelas: "Kelas 2 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3188067586", nama: "NUR AFIFAH NAHDA RAFANDA", kelas: "Kelas 2 SD", jk: "P", fontStyle: "normal", alamat: "Gunung Malang" },
-            { nisn: "3199948168", nama: "RAFKA DAFFA PRADIPTA", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" }
-        ],
-        "Kelas 3 SD": [
-            { nisn: "3172502158", nama: "Abhizar Rosidur Rahman", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3173950446", nama: "AHMAD AUZAN ARDIAS", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3174634084", nama: "AHMAD BUSYRO MIQDAD FIRDAUSY", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3175024222", nama: "ALZAM GIBRAN AHMAD", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3167448897", nama: "AQILA RAMADHANI", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3175053424", nama: "ARKA PRATAMA PUTRA", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3171358742", nama: "AS SYIFA ADZKIA REVALINA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3169348421", nama: "AZZAHRA NABILA LUTFI", kelas: "Kelas 3 SD", jk: "P", fontStyle: "normal", alamat: "Gunung Malang" },
-            { nisn: "3175510665", nama: "BIMA PUTRA ARDIANSYAH", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3173491410", nama: "DANISH GHAZALAN GHAZALI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3173507119", nama: "KAYLA REVA LINDA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3177651786", nama: "KHANZA KHAYRA WILDA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3179269406", nama: "MAULIDIA AILIN NAZILA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3179439823", nama: "MOCH. SHAFIULLAH AL FAQIH", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3174719246", nama: "MOHAMMAD ZAKI MAULIDIL ANZORI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3171439900", nama: "MUHAMMAD ILHAM MAULANA ZAKARIA", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3175489744", nama: "MUHAMMAD KAFA RIZQI ROBBANI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3171482892", nama: "MUHAMMAD NUR SYA'BANA", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3179024140", nama: "MUHAMMAD RIZKY ARDINATA", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3173283058", nama: "RAFLI ZIKRI AL KALIFI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3180776405", nama: "REVANIA KARINA PUTRI", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3174134516", nama: "SAFIRA RAMADHANI", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" }
-        ],
-        "Kelas 4 SD": [
-            { nisn: "0161399686", nama: "AQILA FARISA MUFIA", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3160472078", nama: "AULIA BILQIS RAMADHANI", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3179224843", nama: "AYNA AZKAYRA GINDA", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3161476140", fontStyle: "normal", nama: "ERIL SATRIA AL FATIR", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3162791461", nama: "KEYLA AGUSTINA RAMADHANI", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3163456345", nama: "MAULIDATUL HASANAH", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0162344950", nama: "MOHAMMAD MUHTASIN BILAL", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3162867665", nama: "MUHAMMAD ALBI IHSAN", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3166708336", nama: "MUHAMMAD ALDI HENDRA BRATA", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3165733711", nama: "MUHAMMAD FA'IQ RAHMATULLAH", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3165494345", nama: "MUHAMMAD FIRDAUS AMRULLAH", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0161617475", nama: "MUHAMMAD ZIDAN ALFARIZI", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0162878888", nama: "MUTIARA JANNATUZ ZAHRO", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3171530996", nama: "NUR IKHFAN ISHAQ MAULANA", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0161091880", nama: "Ratih Dewi Ramadhani", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3161858547", nama: "SITI NUR HALIZA", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" }
-        ],
-        "Kelas 5 SD": [
-            { nisn: "0158056411", nama: "AHMAD FATONI MAULANA", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3155183489", nama: "AINUN MA'RIFATUL HASANAH", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "3148553649", nama: "DEFTRIYA AIRLANGGA", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0159654157", nama: "FAIZAH NUR AZIZAH", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0157948633", nama: "IBRAHIM AL KHALIL", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0153839212", nama: "ISTIANATUL MARDIYYAH", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0158066542", nama: "LUTFI HIDAYATUR RAHMAN", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0153216543", nama: "MILATUL APRIYANTI", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0152514437", nama: "MIRNA YULIATIN", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0153224929", nama: "MOHAMMAD ALIWAFA", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0174022674", nama: "Mohammad Rafa Aska", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0158019241", nama: "MUHAMMAD HOLILUR ROHMAN", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "3153682438", nama: "MUHAMMAD RO'IS", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0151268489", nama: "MUHAMMAD ZAKARIA ARISANDI", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0161987060", nama: "NADIRA NUR AZZALIA PUTRI", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0157820943", nama: "NAURA ICHA MAULIDIA", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0158069456", nama: "RAHMATULLAH", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0154475085", fontStyle: "normal", nama: "YULIA EKA RAMADHANI", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" }
-        ],
-        "Kelas 6 SD": [
-            { nisn: "0147995419", nama: "ABDURRAHMAN", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0145051774", nama: "ALBY FACHRIE KRISWANTORO", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0149398418", nama: "FATIMATUZ ZAHRO", kelas: "Kelas 6 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0144620566", nama: "MOH. FAUZI FATONI", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0146888798", nama: "MOH.HASAN FARADES IBRAHIM", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0159754626", nama: "MUHAMMAD AIDILLAH PUTRA PRATAMA", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0148084610", nama: "MUHAMMAD NUGHI WARDANI", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0149358111", nama: "MUHAMMAD RAFA AGUSTIAN MASKUR", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0142157947", nama: "MUHAMMAD REHAN MAULANA", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0149758362", nama: "MUHAMMAD ZAKI", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
-            { nisn: "0147612217", nama: "NATASYA NAURA ANNIDA QOSIM", kelas: "Kelas 6 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0147463985", nama: "NAURA NADHIFA AKMAL", kelas: "Kelas 6 SD", jk: "P", alamat: "Gunung Malang" },
-            { nisn: "0141732913", nama: "ZASKIA AGUSTINA", kelas: "Kelas 6 SD", jk: "P", alamat: "Gunung Malang" }
-        ]
-    };
-
-    const defaultWali = {
-        "Kelas 1 SD": "Belum Diatur", "Kelas 2 SD": "Suhartatik", "Kelas 3 SD": "Reni Tri Wahyuni",
-        "Kelas 4 SD": "Juhairiyah", "Kelas 5 SD": "Suhartatik", "Kelas 6 SD": "Nursyamsiyah Yuliantari"
-    };
-
-    // Sinkronisasi inisialisasi awal LocalStorage
-    if (!localStorage.getItem('edu_db_sekolah_v5')) localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(defaultDB));
-    if (!localStorage.getItem('edu_wali_kelas_v5')) localStorage.setItem('edu_wali_kelas_v5', JSON.stringify(defaultWali));
-    if (!localStorage.getItem('edu_rekap_bulanan_v5')) localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify({}));
-    if (!localStorage.getItem('edu_sampah_rekap_v7')) localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify([]));
-    if (!localStorage.getItem('edu_sch_tapel')) localStorage.setItem('edu_sch_tapel', '2025/2026');
-    if (!localStorage.getItem('edu_sch_semester')) localStorage.setItem('edu_sch_semester', 'Semester Ganjil');
-
-    let dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5'));
-    let dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5'));
-    let dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5'));
-    let dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7'));
-
-    document.getElementById('adm-sch-tapel').value = localStorage.getItem('edu_sch_tapel');
-    document.getElementById('adm-sch-semester').value = localStorage.getItem('edu_sch_semester');
-
-    let dataAbsensiHariIni = [];
-    let html5Qrcode = null;
-    let currentQRDataUrl = "";
-    let isAdminLoggedIn = false;
-    let bootstrapModalEdit = null;
-
-    document.getElementById('g-tanggal').valueAsDate = new Date();
-    const tglSkrg = new Date();
-    document.getElementById('g-waktu').value = `${String(tglSkrg.getHours()).padStart(2, '0')}:${String(tglSkrg.getMinutes()).padStart(2, '0')}`;
-
-    function perbaruiHeaderTahunWeb() {
-        const tp = localStorage.getItem('edu_sch_tapel') || '2025/2026';
-        const sm = localStorage.getItem('edu_sch_semester') || 'Semester Ganjil';
-        document.getElementById('web-header-tapel').innerText = `Tahun Pelajaran: ${tp} | ${sm}`;
-        perbaruiBadgeJumlahSampah();
-    }
-
-    function perbaruiBadgeJumlahSampah() {
-        let listSampah = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-        document.getElementById('badge-jumlah-sampah').innerText = listSampah.length;
-    }
-
-    function gantiMenu(menuId, element) {
-        document.querySelectorAll('.menu-section').forEach(s => s.classList.add('d-none'));
-        document.querySelectorAll('.bottom-nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById('section-' + menuId).classList.remove('d-none');
-        element.classList.add('active');
-        const titles = { 'absensi': 'Menu Absensi', 'rekap-hari-ini': 'Rekap Kelas', 'admin': 'Panel Admin Control' };
-        document.getElementById('current-menu-title').innerText = titles[menuId] || 'Aplikasi Absensi';
-    }
-
-    function prosesLoginAdmin() {
-        if (document.getElementById('admin-pass-input').value === 'admin123') {
-            isAdminLoggedIn = true;
-            document.getElementById('admin-login-box').classList.add('d-none');
-            document.getElementById('admin-main-content').classList.remove('d-none');
-            loadNamaWaliKelasKeInput(); renderTabelMuridAdmin(); renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
-        } else { alert("Sandi salah!"); }
-    }
-
-    function simpanAsetLembaga() {
-        localStorage.setItem('edu_sch_tapel', document.getElementById('adm-sch-tapel').value);
-        localStorage.setItem('edu_sch_semester', document.getElementById('adm-sch-semester').value);
-        perbaruiHeaderTahunWeb();
-        alert("Parameter akademik sukses disimpan!");
-    }
-
-    function buatDropdownBulanOtomatis() {
-        const selectPeriode = document.getElementById('rekap-bulan-periode');
-        if (!selectPeriode) return;
-        selectPeriode.innerHTML = "";
-        const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        
-        const tanggalSekarang = new Date();
-        const tahunSekarang = tanggalSekarang.getFullYear();
-        const bulanSekarang = tanggalSekarang.getMonth() + 1;
-
-        const TAHUN_START = 2026;
-        
-        for (let t = TAHUN_START; t <= tahunSekarang; t++) {
-            for (let m = 1; m <= 12; m++) {
-                if (t === 2026 && m < 6) continue;
-                if (t === tahunSekarang && m > bulanSekarang) break;
+            <div class="modal-body">
+                <input type="hidden" id="edit-old-nisn">
+                <input type="hidden" id="edit-old-kelas">
                 
-                const formatBulan2Digit = String(m).padStart(2, '0');
-                const option = document.createElement('option');
-                option.value = `${t}-${formatBulan2Digit}`; 
-                option.innerText = `${namaBulanIndo[m - 1]} ${t}`;
-                selectPeriode.appendChild(option);
-            }
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Nama Lengkap Siswa</label>
+                    <input type="text" id="edit-m-nama" class="form-control form-control-sm">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Nomor Induk (NIS/NISN)</label>
+                    <input type="text" id="edit-m-nisn" class="form-control form-control-sm">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Jenis Kelamin (L/P)</label>
+                    <select id="edit-m-jk" class="form-select form-select-sm">
+                        <option value="L">L (Laki-laki)</option>
+                        <option value="P">P (Perempuan)</option>
+                    </select>
+                </div>
+                <div class="mb-1">
+                    <label class="form-label small fw-bold">Alamat Rumah</label>
+                    <input type="text" id="edit-m-alamat" class="form-control form-control-sm">
+                </div>
+            </div>
+            <div class="modal-footer p-2 bg-light">
+                <button type="button" class="btn btn-sm btn-secondary fw-semibold px-3" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-sm btn-warning fw-bold px-4 text-dark" onclick="simpanPerubahanMuridAdmin()"><i class="fa-solid fa-circle-check me-1"></i> Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <a href="#" class="bottom-nav-link active" onclick="gantiMenu('absensi', this)"><i class="fa-solid fa-qrcode"></i><span>Absensi</span></a>
+    <a href="#" class="bottom-nav-link" onclick="gantiMenu('rekap-hari-ini', this)"><i class="fa-solid fa-list-check"></i><span>Rekap Kelas</span></a>
+    <a href="#" class="bottom-nav-link" onclick="gantiMenu('admin', this)"><i class="fa-solid fa-user-gear"></i><span>Panel Admin</span></a>
+</div>
+
+<div id="success-overlay" class="success-popup d-none text-center p-4">
+    <i class="fa-solid fa-circle-check text-success" style="font-size: 65px;"></i>
+    <h4 class="mt-2 fw-bold text-dark mb-1">Berhasil!</h4>
+    <p id="pop-nama-murid" class="text-secondary small m-0 fw-bold"></p>
+</div>
+
+<!-- ================= KONFIGURASI FIREBASE REALTIME SDK MODULAR ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// ✅ Akun Firebase Utama Anda yang Benar & Asli Telah Disinkronkan Disini
+const firebaseConfig = {
+    apiKey: "AIzaSyCe2m39ohm5iGYMA2I-XSF8LMdUnDAKO_Y",
+    authDomain: "fasilitas-sekolah-app.firebaseapp.com",
+    databaseURL: "https://fasilitas-sekolah-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "fasilitas-sekolah-app",
+    storageBucket: "fasilitas-sekolah-app.firebasestorage.app",
+    messagingSenderId: "618741335115",
+    appId: "1:1618741335115:web:241fa02f0c80efc58b39ce",
+    measurementId: "G-43DF6V2MJ1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const defaultDB = {
+    "Kelas 1 SD": [{ nisn: "3199826535", nama: "ALFAREZI KAVINDRA AIWIN", kelas: "Kelas 1 SD", jk: "L", alamat: "Gunung Malang" }],
+    "Kelas 2 SD": [
+        { nisn: "3184560525", nama: "AHMAD KURNIAWAN", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3199826535", nama: "ALFAREZI KAVINDRA AIWIN", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3182393855", nama: "ANNISA RAHMAWATI", kelas: "Kelas 2 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3183588984", nama: "BILQIS ADZKIA REVALINA", kelas: "Kelas 2 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3181829676", nama: "FADIL AHMAD RAMADHAN", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3185563333", nama: "IFAN MAULANA", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3185367657", nama: "IQBAL DWI ARDIANSYAH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3181467439", nama: "M. GAVIN SAMSUL", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3181089391", nama: "MOH. RAFIF FAIZ AL AMIYAH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3183468327", nama: "MOH. REFAN HAIRULLAH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3186704479", nama: "MUHAMMAD AZKA SHAKIL FAHREZA", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3173039142", nama: "MUHAMMAD CATUR AL FATIH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3187977896", nama: "MUHAMMAD RIFQI RHOMADHONY", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3184197679", nama: "MUHAMMAD SARIF ABDULLAH", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3189948564", nama: "MUHAMMAD SYAUQI ILAL HABIB", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3196332229", nama: "NAFLA SYAQIRA KAMILA", kelas: "Kelas 2 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3188067586", nama: "NUR AFIFAH NAHDA RAFANDA", kelas: "Kelas 2 SD", jk: "P", fontStyle: "normal", alamat: "Gunung Malang" },
+        { nisn: "3199948168", nama: "RAFKA DAFFA PRADIPTA", kelas: "Kelas 2 SD", jk: "L", alamat: "Gunung Malang" }
+    ],
+    "Kelas 3 SD": [
+        { nisn: "3172502158", nama: "Abhizar Rosidur Rahman", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3173950446", nama: "AHMAD AUZAN ARDIAS", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3174634084", nama: "AHMAD BUSYRO MIQDAD FIRDAUSY", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3175024222", nama: "ALZAM GIBRAN AHMAD", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3167448897", nama: "AQILA RAMADHANI", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3175053424", nama: "ARKA PRATAMA PUTRA", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3171358742", nama: "AS SYIFA ADZKIA REVALINA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3169348421", nama: "AZZAHRA NABILA LUTFI", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3175510665", nama: "BIMA PUTRA ARDIANSYAH", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3173491410", nama: "DANISH GHAZALAN GHAZALI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3173507119", nama: "KAYLA REVA LINDA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3177651786", fontStyle: "normal", nama: "KHANZA KHAYRA WILDA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3179269406", nama: "MAULIDIA AILIN NAZILA", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3179439823", nama: "MOCH. SHAFIULLAH AL FAQIH", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3174719246", nama: "MOHAMMAD ZAKI MAULIDIL ANZORI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3171439900", nama: "MUHAMMAD ILHAM MAULANA ZAKARIA", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3175489744", nama: "MUHAMMAD KAFA RIZQI ROBBANI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3171482892", nama: "MUHAMMAD NUR SYA'BANA", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3179024140", nama: "MUHAMMAD RIZKY ARDINATA", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3173283058", nama: "RAFLI ZIKRI AL KALIFI", kelas: "Kelas 3 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3180776405", nama: "REVANIA KARINA PUTRI", kelas: "Kelas 3 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3174134516", nama: "SAFIRA RAMADHANI", kelas: "Kelas 3 SD", jk: "P", fontStyle: "normal", alamat: "Gunung Malang" }
+    ],
+    "Kelas 4 SD": [
+        { nisn: "0161399686", nama: "AQILA FARISA MUFIA", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3160472078", nama: "AULIA BILQIS RAMADHANI", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3179224843", nama: "AYNA AZKAYRA GINDA", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3161476140", nama: "ERIL SATRIA AL FATIR", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3162791461", nama: "KEYLA AGUSTINA RAMADHANI", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3163456345", nama: "MAULIDATUL HASANAH", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0162344950", nama: "MOHAMMAD MUHTASIN BILAL", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3162867665", nama: "MUHAMMAD ALBI IHSAN", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3166708336", nama: "MUHAMMAD ALDI HENDRA BRATA", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3165733711", nama: "MUHAMMAD FA'IQ RAHMATULLAH", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3165494345", nama: "MUHAMMAD FIRDAUS AMRULLAH", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0161617475", nama: "MUHAMMAD ZIDAN ALFARIZI", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0162878888", nama: "MUTIARA JANNATUZ ZAHRO", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3171530996", nama: "NUR IKHFAN ISHAQ MAULANA", kelas: "Kelas 4 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0161091880", nama: "Ratih Dewi Ramadhani", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3161858547", nama: "SITI NUR HALIZA", kelas: "Kelas 4 SD", jk: "P", alamat: "Gunung Malang" }
+    ],
+    "Kelas 5 SD": [
+        { nisn: "0158056411", nama: "AHMAD FATONI MAULANA", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3155183489", nama: "AINUN MA'RIFATUL HASANAH", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "3148553649", nama: "DEFTRIYA AIRLANGGA", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0159654157", nama: "FAIZAH NUR AZIZAH", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0157948633", nama: "IBRAHIM AL KHALIL", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0153839212", nama: "ISTIANATUL MARDIYYAH", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0158066542", nama: "LUTFI HIDAYATUR RAHMAN", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0153216543", nama: "MILATUL APRIYANTI", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0152514437", nama: "MIRNA YULIATIN", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0153224929", nama: "MOHAMMAD ALIWAFA", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0174022674", nama: "Mohammad Rafa Aska", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0158019241", nama: "MUHAMMAD HOLILUR ROHMAN", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "3153682438", nama: "MUHAMMAD RO'IS", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0151268489", nama: "MUHAMMAD ZAKARIA ARISANDI", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0161987060", nama: "NADIRA NUR AZZALIA PUTRI", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0157820943", nama: "NAURA ICHA MAULIDIA", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0158069456", nama: "RAHMATULLAH", kelas: "Kelas 5 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0154475085", fontStyle: "normal", nama: "YULIA EKA RAMADHANI", kelas: "Kelas 5 SD", jk: "P", alamat: "Gunung Malang" }
+    ],
+    "Kelas 6 SD": [
+        { nisn: "0147995419", nama: "ABDURRAHMAN", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0145051774", nama: "ALBY FACHRIE KRISWANTORO", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0149398418", nama: "FATIMATUZ ZAHRO", kelas: "Kelas 6 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0144620566", nama: "MOH. FAUZI FATONI", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0146888798", nama: "MOH.HASAN FARADES IBRAHIM", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0159754626", nama: "MUHAMMAD AIDILLAH PUTRA PRATAMA", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0148084610", nama: "MUHAMMAD NUGHI WARDANI", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0149358111", nama: "MUHAMMAD RAFA AGUSTIAN MASKUR", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0142157947", nama: "MUHAMMAD REHAN MAULANA", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0149758362", nama: "MUHAMMAD ZAKI", kelas: "Kelas 6 SD", jk: "L", alamat: "Gunung Malang" },
+        { nisn: "0147612217", nama: "NATASYA NAURA ANNIDA QOSIM", kelas: "Kelas 6 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0147463985", nama: "NAURA NADHIFA AKMAL", kelas: "Kelas 6 SD", jk: "P", alamat: "Gunung Malang" },
+        { nisn: "0141732913", nama: "ZASKIA AGUSTINA", kelas: "Kelas 6 SD", jk: "P", alamat: "Gunung Malang" }
+    ]
+};
+
+const defaultWali = {
+    "Kelas 1 SD": "Belum Diatur", "Kelas 2 SD": "Suhartatik", "Kelas 3 SD": "Reni Tri Wahyuni",
+    "Kelas 4 SD": "Juhairiyah", "Kelas 5 SD": "Suhartatik", "Kelas 6 SD": "Nursyamsiyah Yuliantari"
+};
+
+// State Variables Global
+window.dbSekolah = defaultDB;
+window.dbWaliKelas = defaultWali;
+window.dbRekapBulanan = {};
+window.dbSampahRekap = [];
+window.dataAbsensiHariIni = [];
+window.html5Qrcode = null;
+window.currentQRDataUrl = "";
+window.isAdminLoggedIn = false;
+window.bootstrapModalEdit = null;
+
+// Sinkronisasi Realtime Firebase Node Utama
+onValue(ref(db, "edu_db_sekolah"), (snapshot) => {
+    if (snapshot.exists()) { window.dbSekolah = snapshot.val(); } 
+    else { set(ref(db, "edu_db_sekolah"), defaultDB); window.dbSekolah = defaultDB; }
+    if(window.isAdminLoggedIn) renderTabelMuridAdmin();
+});
+
+onValue(ref(db, "edu_wali_kelas"), (snapshot) => {
+    if (snapshot.exists()) { window.dbWaliKelas = snapshot.val(); } 
+    else { set(ref(db, "edu_wali_kelas"), defaultWali); window.dbWaliKelas = defaultWali; }
+});
+
+onValue(ref(db, "edu_rekap_bulanan"), (snapshot) => {
+    window.dbRekapBulanan = snapshot.exists() ? snapshot.val() : {};
+    if(window.isAdminLoggedIn) renderMasterRekapBulanan();
+});
+
+onValue(ref(db, "edu_sampah_rekap"), (snapshot) => {
+    window.dbSampahRekap = snapshot.exists() ? snapshot.val() : [];
+    perbaruiBadgeJumlahSampah();
+    if(window.isAdminLoggedIn) renderMenuSampahAdmin();
+});
+
+// Setup default config setting
+if (!localStorage.getItem('edu_sch_tapel')) localStorage.setItem('edu_sch_tapel', '2025/2026');
+if (!localStorage.getItem('edu_sch_semester')) localStorage.setItem('edu_sch_semester', 'Semester Ganjil');
+document.getElementById('adm-sch-tapel').value = localStorage.getItem('edu_sch_tapel');
+document.getElementById('adm-sch-semester').value = localStorage.getItem('edu_sch_semester');
+
+document.getElementById('g-tanggal').valueAsDate = new Date();
+const tglSkrg = new Date();
+document.getElementById('g-waktu').value = `${String(tglSkrg.getHours()).padStart(2, '0')}:${String(tglSkrg.getMinutes()).padStart(2, '0')}`;
+
+function perbaruiHeaderTahunWeb() {
+    const tp = localStorage.getItem('edu_sch_tapel') || '2025/2026';
+    const sm = localStorage.getItem('edu_sch_semester') || 'Semester Ganjil';
+    document.getElementById('web-header-tapel').innerText = `Tahun Pelajaran: ${tp} | ${sm}`;
+    perbaruiBadgeJumlahSampah();
+}
+
+function perbaruiBadgeJumlahSampah() {
+    document.getElementById('badge-jumlah-sampah').innerText = window.dbSampahRekap ? Object.keys(window.dbSampahRekap).length : 0;
+}
+perbaruiHeaderTahunWeb();
+
+// Fungsi Global Window Scope Mapping
+window.gantiMenu = function(menuId, element) {
+    document.querySelectorAll('.menu-section').forEach(s => s.classList.add('d-none'));
+    document.querySelectorAll('.bottom-nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('section-' + menuId).classList.remove('d-none');
+    element.classList.add('active');
+    const titles = { 'absensi': 'Menu Absensi', 'rekap-hari-ini': 'Rekap Kelas', 'admin': 'Panel Admin Control' };
+    document.getElementById('current-menu-title').innerText = titles[menuId];
+}
+
+window.prosesLoginAdmin = function() {
+    if (document.getElementById('admin-pass-input').value === 'admin123') {
+        window.isAdminLoggedIn = true;
+        document.getElementById('admin-login-box').classList.add('d-none');
+        document.getElementById('admin-main-content').classList.remove('d-none');
+        loadNamaWaliKelasKeInput(); renderTabelMuridAdmin(); renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
+    } else { alert("Sandi salah!"); }
+}
+
+window.simpanAsetLembaga = function() {
+    localStorage.setItem('edu_sch_tapel', document.getElementById('adm-sch-tapel').value);
+    localStorage.setItem('edu_sch_semester', document.getElementById('adm-sch-semester').value);
+    perbaruiHeaderTahunWeb();
+}
+
+window.buatDropdownBulanOtomatis = function() {
+    const selectPeriode = document.getElementById('rekap-bulan-periode');
+    if (!selectPeriode) return;
+    selectPeriode.innerHTML = "";
+    const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    
+    const tanggalSekarang = new Date();
+    const tahunSekarang = tanggalSekarang.getFullYear();
+    const bulanSekarang = tanggalSekarang.getMonth() + 1;
+    const TAHUN_START = 2026;
+    
+    for (let t = TAHUN_START; t <= tahunSekarang; t++) {
+        for (let m = 1; m <= 12; m++) {
+            if (t === 2026 && m < 6) continue;
+            if (t === tahunSekarang && m > bulanSekarang) break;
+            
+            const formatBulan2Digit = String(m).padStart(2, '0');
+            const option = document.createElement('option');
+            option.value = `${t}-${formatBulan2Digit}`; 
+            option.innerText = `${namaBulanIndo[m - 1]} ${t}`;
+            selectPeriode.appendChild(option);
         }
-        selectPeriode.value = `${tahunSekarang}-${String(bulanSekarang).padStart(2, '0')}`;
     }
+    selectPeriode.value = `${tahunSekarang}-${String(bulanSekarang).padStart(2, '0')}`;
+}
 
-    function loadNamaWaliKelasKeInput() {
-        const kelasSelected = document.getElementById('adm-wali-kelas-select').value;
-        dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-        document.getElementById('adm-wali-nama-input').value = dbWaliKelas[kelasSelected] || "";
-    }
+window.loadNamaWaliKelasKeInput = function() {
+    const kelasSelected = document.getElementById('adm-wali-kelas-select').value;
+    document.getElementById('adm-wali-nama-input').value = window.dbWaliKelas[kelasSelected] || "";
+}
 
-    function simpanWaliKelasAdmin() {
-        const kelasSelected = document.getElementById('adm-wali-kelas-select').value;
-        const namaWaliBaru = document.getElementById('adm-wali-nama-input').value.trim();
-        if(!namaWaliBaru) { alert("Nama wali kelas tidak boleh kosong!"); return; }
+window.simpanWaliKelasAdmin = function() {
+    const kelasSelected = document.getElementById('adm-wali-kelas-select').value;
+    const namaWaliBaru = document.getElementById('adm-wali-nama-input').value.trim();
+    if(!namaWaliBaru) { alert("Nama wali kelas tidak boleh kosong!"); return; }
 
-        dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-        dbWaliKelas[kelasSelected] = namaWaliBaru;
-        localStorage.setItem('edu_wali_kelas_v5', JSON.stringify(dbWaliKelas));
+    window.dbWaliKelas[kelasSelected] = namaWaliBaru;
+    set(ref(db, "edu_wali_kelas"), window.dbWaliKelas).then(() => {
         alert(`Wali Kelas untuk ${kelasSelected} berhasil diperbarui!`);
         renderTabelMuridAdmin();
+    });
+}
+
+window.tampilkanWaliKelasDiGuru = function(kelas) {
+    const infoArea = document.getElementById('g-wali-info');
+    if(!kelas) { infoArea.innerText = ""; return; }
+    infoArea.innerText = `Wali Kelas: ${window.dbWaliKelas[kelas] || 'Belum Diatur'}`;
+}
+
+window.dapatkanDataSiswaUrutAbjad = function(kelas) {
+    let listSiswa = window.dbSekolah[kelas] || [];
+    return Object.values(listSiswa).sort((a, b) => a.nama.localeCompare(b.nama));
+}
+
+window.renderTabelMuridAdmin = function() {
+    const k = document.getElementById('adm-filter-kelas').value;
+    const tbody = document.getElementById('adm-tabel-murid');
+    tbody.innerHTML = '';
+    
+    document.getElementById('adm-info-wali-tabel').innerText = `Wali Kelas: ${window.dbWaliKelas[k] || '-'}`;
+
+    const muridTerurut = dapatkanDataSiswaUrutAbjad(k);
+    if (muridTerurut.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Tidak ada data siswa terdaftar di kelas ini.</td></tr>`;
+        return;
     }
 
-    function tampilkanWaliKelasDiGuru(kelas) {
-        const infoArea = document.getElementById('g-wali-info');
-        if(!kelas) { infoArea.innerText = ""; return; }
-        dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-        infoArea.innerText = `Wali Kelas: ${dbWaliKelas[kelas] || 'Belum Diatur'}`;
+    muridTerurut.forEach((m, index) => {
+        const genderText = m.jk ? ((m.jk === 'L' || m.jk === 'Laki-laki') ? 'L' : 'P') : '-';
+        tbody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td><b>${m.nama}</b><br><small class="text-muted">NISN: ${m.nisn}</small></td>
+                <td><span class="badge bg-light text-dark border">${genderText}</span></td>
+                <td><span class="text-secondary d-inline-block text-truncate" style="max-width: 180px;" title="${m.alamat || '-'}">${m.alamat || '-'}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="buatQRAdmin('${m.nisn}','${m.nama}')" title="Buat QR"><i class="fa-solid fa-qrcode"></i></button>
+                    <button class="btn btn-sm btn-outline-warning py-0 px-2 me-1 text-dark" onclick="bukaModalEditAdmin('${k}','${m.nisn}')" title="Edit Data"><i class="fa-solid fa-user-pen"></i></button>
+                    <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="hapusMuridAdmin('${k}','${m.nisn}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>`;
+    });
+}
+
+window.prosesUploadExcelMassal = function() {
+    const kelasTujuan = document.getElementById('adm-excel-kelas-tujuan').value;
+    const fileInput = document.getElementById('adm-excel-file-input');
+    
+    if (fileInput.files.length === 0) {
+        alert("Silakan pilih file Excel (.xlsx / .xls) atau .csv terlebih dahulu!");
+        return;
     }
 
-    function dapatkanDataSiswaUrutAbjad(kelas) {
-        dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-        let listSiswa = dbSekolah[kelas] || [];
-        return listSiswa.sort((a, b) => a.nama.localeCompare(b.nama));
-    }
+    const fileBerkas = fileInput.files[0];
+    const pembaca = new FileReader();
 
-    function renderTabelMuridAdmin() {
-        const k = document.getElementById('adm-filter-kelas').value;
-        const tbody = document.getElementById('adm-tabel-murid');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        
-        dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-        document.getElementById('adm-info-wali-tabel').innerText = `Wali Kelas: ${dbWaliKelas[k] || '-'}`;
+    pembaca.onload = function(e) {
+        try {
+            const dataBiner = e.target.result;
+            const workbook = XLSX.read(dataBiner, { type: 'binary' });
+            const namaSheetPertama = workbook.SheetNames[0];
+            const lembarKerja = workbook.Sheets[namaSheetPertama];
+            const dataJson = XLSX.utils.sheet_to_json(lembarKerja, { defval: "" });
+            
+            if (dataJson.length === 0) {
+                alert("File Excel kosong atau tidak terbaca.");
+                return;
+            }
 
-        const muridTerurut = dapatkanDataSiswaUrutAbjad(k);
-        if (muridTerurut.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Tidak ada data siswa terdaftar di kelas ini.</td></tr>`;
-            return;
-        }
+            if(!window.dbSekolah[kelasTujuan]) window.dbSekolah[kelasTujuan] = [];
 
-        muridTerurut.forEach((m, index) => {
-            const genderText = m.jk ? ((m.jk === 'L' || m.jk === 'Laki-laki') ? 'L' : 'P') : '-';
-            tbody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td><b>${m.nama}</b><br><small class="text-muted">NISN: ${m.nisn}</small></td>
-                    <td><span class="badge bg-light text-dark border">${genderText}</span></td>
-                    <td><span class="text-secondary d-inline-block text-truncate" style="max-width: 180px;" title="${m.alamat || '-'}">${m.alamat || '-'}</span></td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="buatQRAdmin('${m.nisn}','${m.nama}')" title="Buat QR"><i class="fa-solid fa-qrcode"></i></button>
-                        <button class="btn btn-sm btn-outline-warning py-0 px-2 me-1 text-dark" onclick="bukaModalEditAdmin('${k}','${m.nisn}')" title="Edit Data"><i class="fa-solid fa-user-pen"></i></button>
-                        <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="hapusMuridAdmin('${k}','${m.nisn}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`;
-        });
-    }
+            let jumlahSukses = 0;
+            let jumlahDuplikat = 0;
 
-    function prosesUploadExcelMassal() {
-        const kelasTujuan = document.getElementById('adm-excel-kelas-tujuan').value;
-        const fileInput = document.getElementById('adm-excel-file-input');
-        
-        if (fileInput.files.length === 0) {
-            alert("Silakan pilih file Excel (.xlsx / .xls) atau .csv terlebih dahulu!");
-            return;
-        }
+            dataJson.forEach(row => {
+                let namaSiswa = "";
+                let nomorNisn = "";
+                let jenisKelamin = "L";
+                let alamatSiswa = "Gunung Malang";
 
-        const fileBerkas = fileInput.files[0];
-        const pembaca = new FileReader();
-
-        pembaca.onload = function(e) {
-            try {
-                const dataBiner = e.target.result;
-                const workbook = XLSX.read(dataBiner, { type: 'binary' });
-                const namaSheetPertama = workbook.SheetNames[0];
-                const lembarKerja = workbook.Sheets[namaSheetPertama];
-                const dataJson = XLSX.utils.sheet_to_json(lembarKerja, { defval: "" });
-                
-                if (dataJson.length === 0) {
-                    alert("File Excel kosong atau tidak terbaca.");
-                    return;
+                for (let key in row) {
+                    let kLower = key.toLowerCase().trim();
+                    if (kLower.includes("nama")) namaSiswa = String(row[key]).trim();
+                    else if (kLower.includes("nisn") || kLower === "nis") {
+                        let rawNisn = String(row[key]).trim();
+                        nomorNisn = rawNisn.split('/')[0].trim();
+                    }
+                    else if (kLower === "jk" || kLower.includes("kelamin") || kLower === "l/p") {
+                        let rawJk = String(row[key]).toUpperCase().trim();
+                        jenisKelamin = (rawJk.startsWith("P") || rawJk === "PEREMPUAN") ? "P" : "L";
+                    }
+                    else if (kLower.includes("alamat") || kLower.includes("rumah")) {
+                        alamatSiswa = String(row[key]).trim();
+                    }
                 }
 
-                dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-                if(!dbSekolah[kelasTujuan]) dbSekolah[kelasTujuan] = [];
-
-                let jumlahSukses = 0;
-                let jumlahDuplikat = 0;
-
-                dataJson.forEach(row => {
-                    let namaSiswa = "";
-                    let nomorNisn = "";
-                    let jenisKelamin = "L";
-                    let alamatSiswa = "Gunung Malang";
-
-                    for (let key in row) {
-                        let kLower = key.toLowerCase().trim();
-                        if (kLower.includes("nama")) namaSiswa = String(row[key]).trim();
-                        else if (kLower.includes("nisn") || kLower === "nis") {
-                            let rawNisn = String(row[key]).trim();
-                            nomorNisn = rawNisn.split('/')[0].trim();
-                        }
-                        else if (kLower === "jk" || kLower.includes("kelamin") || kLower === "l/p") {
-                            let rawJk = String(row[key]).toUpperCase().trim();
-                            jenisKelamin = (rawJk.startsWith("P") || rawJk === "PEREMPUAN") ? "P" : "L";
-                        }
-                        else if (kLower.includes("alamat") || kLower.includes("rumah")) {
-                            alamatSiswa = String(row[key]).trim();
+                if (namaSiswa && nomorNisn) {
+                    let isDuplikat = false;
+                    for (let kl in window.dbSekolah) {
+                        if (window.dbSekolah[kl].some(siswa => siswa.nisn === nomorNisn)) {
+                            isDuplikat = true;
+                            break;
                         }
                     }
 
-                    if (namaSiswa && nomorNisn) {
-                        let isDuplikat = false;
-                        for (let kl in dbSekolah) {
-                            if (dbSekolah[kl].some(siswa => siswa.nisn === nomorNisn)) {
-                                isDuplikat = true;
-                                break;
-                            }
-                        }
-
-                        if (!isDuplikat) {
-                            dbSekolah[kelasTujuan].push({
-                                nisn: nomorNisn,
-                                nama: namaSiswa,
-                                kelas: kelasTujuan,
-                                jk: jenisKelamin,
-                                alamat: alamatSiswa
-                            });
-                            jumlahSukses++;
-                        } else {
-                            jumlahDuplikat++;
-                        }
+                    if (!isDuplikat) {
+                        window.dbSekolah[kelasTujuan].push({
+                            nisn: nomorNisn,
+                            nama: namaSiswa,
+                            kelas: kelasTujuan,
+                            jk: jenisKelamin,
+                            alamat: alamatSiswa
+                        });
+                        jumlahSukses++;
+                    } else {
+                        jumlahDuplikat++;
                     }
-                });
+                }
+            });
 
-                localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
+            set(ref(db, "edu_db_sekolah"), window.dbSekolah).then(() => {
                 document.getElementById('adm-filter-kelas').value = kelasTujuan;
                 renderTabelMuridAdmin();
                 renderMasterRekapBulanan();
                 fileInput.value = "";
-
                 alert(`🎉 Proses Impor Selesai!\n=======================\n✅ Berhasil ditambahkan: ${jumlahSukses} Siswa\n⚠️ Dilewati (NISN Duplikat/Ganda): ${jumlahDuplikat} Siswa\n\nData dialokasikan ke: ${kelasTujuan}`);
-
-            } catch (error) {
-                console.error(error);
-                alert("Terjadi kesalahan teknis saat mengekstrak file Excel.");
-            }
-        };
-        pembaca.readAsBinaryString(fileBerkas);
-    }
-
-    function unduhMassalQRPerKelas() {
-        const kelasTerpilih = document.getElementById('adm-filter-kelas').value;
-        const muridTerurut = dapatkanDataSiswaUrutAbjad(kelasTerpilih);
-
-        if (muridTerurut.length === 0) {
-            alert(`Tidak ada data siswa di ${kelasTerpilih} untuk diunduh QR-nya.`);
-            return;
-        }
-
-        if (!confirm(`Sistem akan memproses pembuatan & pengunduhan paket QR Code untuk ${muridTerurut.length} siswa di ${kelasTerpilih}.\n\nProses ini berjalan otomatis dalam file format ZIP. Lanjutkan?`)) {
-            return;
-        }
-
-        const zip = new JSZip();
-        const containerTersembunyi = document.getElementById('qr-hidden-generator');
-        let counterSelesai = 0;
-
-        muridTerurut.forEach((siswa) => {
-            const divVirtual = document.createElement('div');
-            containerTersembunyi.appendChild(divVirtual);
-            
-            new QRCode(divVirtual, {
-                text: siswa.nisn,
-                width: 250,
-                height: 250,
-                correctLevel: QRCode.CorrectLevel.H
             });
 
-            setTimeout(() => {
-                const img = divVirtual.querySelector('img');
-                const canvas = divVirtual.querySelector('canvas');
-                let dataUrl = "";
+        } catch (error) {
+            console.error(error);
+            alert("Terjadi kesalahan teknis saat mengekstrak file Excel.");
+        }
+    };
+    pembaca.readAsBinaryString(fileBerkas);
+}
 
-                if (img && img.src && img.src.startsWith('data:image')) {
-                    dataUrl = img.src;
-                } else if (canvas) {
-                    dataUrl = canvas.toDataURL("image/png");
-                }
+window.unduhMassalQRPerKelas = function() {
+    const kelasTerpilih = document.getElementById('adm-filter-kelas').value;
+    const muridTerurut = dapatkanDataSiswaUrutAbjad(kelasTerpilih);
 
-                if (dataUrl) {
-                    const base64Data = dataUrl.split(',')[1];
-                    const namaFileBersih = siswa.nama.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_');
-                    zip.file(`QR_${siswa.nisn}_${namaFileBersih}.png`, base64Data, { base64: true });
-                }
-
-                counterSelesai++;
-
-                if (counterSelesai === muridTerurut.length) {
-                    zip.generateAsync({ type: "blob" }).then(function (content) {
-                        const formatNamaZip = `Paket_QR_Code_${kelasTerpilih.replace(/\s+/g, '_')}.zip`;
-                        const linkVirtual = document.createElement('a');
-                        linkVirtual.href = URL.createObjectURL(content);
-                        linkVirtual.download = formatNamaZip;
-                        document.body.appendChild(linkVirtual);
-                        linkVirtual.click();
-                        document.body.removeChild(linkVirtual);
-                        
-                        containerTersembunyi.innerHTML = ''; 
-                        alert(`🎉 Berhasil! Seluruh QR Code (${muridTerurut.length} siswa) ${kelasTerpilih} sukses dikemas dan diunduh.`);
-                    });
-                }
-            }, 150); 
-        });
+    if (muridTerurut.length === 0) {
+        alert(`Tidak ada data siswa di ${kelasTerpilih} untuk diunduh QR-nya.`);
+        return;
     }
 
-    function pindahkanSatuKelasSiswaKeSampah() {
-        const kelasTerpilih = document.getElementById('adm-filter-kelas').value;
-        dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-        
-        let listSiswaKelas = dbSekolah[kelasTerpilih] || [];
-        if (listSiswaKelas.length === 0) {
-            alert(`Data siswa untuk ${kelasTerpilih} sudah kosong.`);
-            return;
-        }
+    if (!confirm(`Sistem akan memproses pembuatan & pengunduhan paket QR Code untuk ${muridTerurut.length} siswa di ${kelasTerpilih}.\n\nProses ini berjalan otomatis dalam file format ZIP. Lanjutkan?`)) {
+        return;
+    }
 
-        if (confirm(`Apakah Anda yakin ingin mengosongkan ${kelasTerpilih}?\nSemua data siswa (${listSiswaKelas.length} anak) akan dipindahkan ke folder Sampah.`)) {
-            if (confirm(`⚠️ TINDAKAN KEAMANAN ADMIN:\n\nApakah benar Anda ingin memindahkan data siswa ${kelasTerpilih} sekaligus?\nKlik 'OK' untuk melanjutkan.`)) {
-                dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-                
-                dbSampahRekap.push({
-                    idSampah: 'MASS_SISWA_' + Date.now(),
-                    periode: '[Siswa Massal]',
-                    kelas: kelasTerpilih,
-                    kontenData: listSiswaKelas 
+    const zip = new JSZip();
+    const containerTersembunyi = document.getElementById('qr-hidden-generator');
+    let counterSelesai = 0;
+
+    muridTerurut.forEach((siswa) => {
+        containerTersembunyi.innerHTML = ''; 
+        const qrObjek = new QRCode(containerTersembunyi, {
+            text: siswa.nisn,
+            width: 250,      
+            height: 250,
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        setTimeout(() => {
+            const img = containerTersembunyi.querySelector('img');
+            const canvas = containerTersembunyi.querySelector('canvas');
+            let dataUrl = "";
+
+            if (img && img.src && img.src.startsWith('data:image')) {
+                dataUrl = img.src;
+            } else if (canvas) {
+                dataUrl = canvas.toDataURL("image/png");
+            }
+
+            if (dataUrl) {
+                const base64Data = dataUrl.split(',')[1];
+                const namaFileBersih = siswa.nama.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_');
+                zip.file(`QR_${siswa.nisn}_${namaFileBersih}.png`, base64Data, { base64: true });
+            }
+
+            counterSelesai++;
+
+            if (counterSelesai === muridTerurut.length) {
+                zip.generateAsync({ type: "blob" }).then(function (content) {
+                    const formatNamaZip = `Paket_QR_Code_${kelasTerpilih.replace(/\s+/g, '_')}.zip`;
+                    const linkVirtual = document.createElement('a');
+                    linkVirtual.href = URL.createObjectURL(content);
+                    linkVirtual.download = formatNamaZip;
+                    document.body.appendChild(linkVirtual);
+                    linkVirtual.click();
+                    document.body.removeChild(linkVirtual);
+                    
+                    containerTersembunyi.innerHTML = ''; 
+                    alert(`🎉 Berhasil! Seluruh QR Code (${muridTerurut.length} siswa) ${kelasTerpilih} sukses dikemas dan diunduh.`);
                 });
-                localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify(dbSampahRekap));
+            }
+        }, 120); 
+    });
+}
 
-                dbSekolah[kelasTerpilih] = [];
-                localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
+window.pindahkanSatuKelasSiswaKeSampah = function() {
+    const kelasTerpilih = document.getElementById('adm-filter-kelas').value;
+    let listSiswaKelas = window.dbSekolah[kelasTerpilih] || [];
+    if (listSiswaKelas.length === 0) {
+        alert(`Data siswa untuk ${kelasTerpilih} sudah kosong.`);
+        return;
+    }
 
+    if (confirm(`Apakah Anda yakin ingin mengosongkan ${kelasTerpilih}?\nSemua data siswa (${listSiswaKelas.length} anak) akan dipindahkan ke folder Sampah.`)) {
+        if (confirm(`⚠️ TINDAKAN KEAMANAN ADMIN:\n\nApakah benar Anda ingin memindahkan data siswa ${kelasTerpilih} sekaligus?\nKlik 'OK' untuk melanjutkan.`)) {
+            
+            let listSampah = Array.isArray(window.dbSampahRekap) ? window.dbSampahRekap : [];
+            listSampah.push({
+                idSampah: 'MASS_SISWA_' + Date.now(),
+                periode: '[Siswa Massal]',
+                kelas: kelasTerpilih,
+                kontenData: listSiswaKelas 
+            });
+
+            window.dbSekolah[kelasTerpilih] = [];
+            
+            set(ref(db, "edu_db_sekolah"), window.dbSekolah);
+            set(ref(db, "edu_sampah_rekap"), listSampah).then(() => {
                 alert(`🎉 Berhasil! Seluruh data siswa ${kelasTerpilih} telah dipindahkan ke folder Sampah.`);
                 renderTabelMuridAdmin();
                 perbaruiBadgeJumlahSampah();
                 document.getElementById('qr-preview-area').classList.add('d-none');
-            }
+            });
+        }
+    }
+}
+
+window.bukaModalEditAdmin = function(kelas, nisn) {
+    let m = window.dbSekolah[kelas].find(x => x.nisn === nisn);
+    if (!m) return;
+
+    document.getElementById('edit-old-kelas').value = kelas;
+    document.getElementById('edit-old-nisn').value = nisn;
+    document.getElementById('edit-m-nama').value = m.nama;
+    document.getElementById('edit-m-nisn').value = m.nisn;
+    document.getElementById('edit-m-jk').value = (m.jk === 'L' || m.jk === 'Laki-laki') ? "L" : "P";
+    document.getElementById('edit-m-alamat').value = m.alamat || "";
+
+    if(!window.bootstrapModalEdit) window.bootstrapModalEdit = new bootstrap.Modal(document.getElementById('modalEditMurid'));
+    window.bootstrapModalEdit.show();
+}
+
+window.simpanPerubahanMuridAdmin = function() {
+    const kelas = document.getElementById('edit-old-kelas').value;
+    const oldNisn = document.getElementById('edit-old-nisn').value;
+    const namaBaru = document.getElementById('edit-m-nama').value.trim();
+    const nisnBaru = document.getElementById('edit-m-nisn').value.trim();
+    const jkBaru = document.getElementById('edit-m-jk').value;
+    const alamatBaru = document.getElementById('edit-m-alamat').value.trim();
+
+    if(!namaBaru || !nisnBaru || !alamatBaru) { alert("Semua kolom data harus diisi!"); return; }
+
+    if(oldNisn !== nisnBaru) {
+        for (let x in window.dbSekolah) {
+            if(window.dbSekolah[x].some(z => z.nisn === nisnBaru)) { alert("NIS/NISN baru sudah dipakai siswa lain!"); return; }
         }
     }
 
-    function bukaModalEditAdmin(kelas, nisn) {
-        dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-        let m = dbSekolah[kelas].find(x => x.nisn === nisn);
-        if (!m) return;
-
-        document.getElementById('edit-old-kelas').value = kelas;
-        document.getElementById('edit-old-nisn').value = nisn;
-        document.getElementById('edit-m-nama').value = m.nama;
-        document.getElementById('edit-m-nisn').value = m.nisn;
-        document.getElementById('edit-m-jk').value = (m.jk === 'L' || m.jk === 'Laki-laki') ? "L" : "P";
-        document.getElementById('edit-m-alamat').value = m.alamat || "";
-
-        if(!bootstrapModalEdit) bootstrapModalEdit = new bootstrap.Modal(document.getElementById('modalEditMurid'));
-        bootstrapModalEdit.show();
+    let indeksMurid = window.dbSekolah[kelas].findIndex(x => x.nisn === oldNisn);
+    if(indeksMurid !== -1) {
+        window.dbSekolah[kelas][indeksMurid].nama = namaBaru; window.dbSekolah[kelas][indeksMurid].nisn = nisnBaru;
+        window.dbSekolah[kelas][indeksMurid].jk = jkBaru; window.dbSekolah[kelas][indeksMurid].alamat = alamatBaru;
     }
 
-    function simpanPerubahanMuridAdmin() {
-        const kelas = document.getElementById('edit-old-kelas').value;
-        const oldNisn = document.getElementById('edit-old-nisn').value;
-        const namaBaru = document.getElementById('edit-m-nama').value.trim();
-        const nisnBaru = document.getElementById('edit-m-nisn').value.trim();
-        const jkBaru = document.getElementById('edit-m-jk').value;
-        const alamatBaru = document.getElementById('edit-m-alamat').value.trim();
-
-        if(!namaBaru || !nisnBaru || !alamatBaru) { alert("Semua kolom data harus diisi!"); return; }
-
-        dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-        if(oldNisn !== nisnBaru) {
-            for (let x in dbSekolah) {
-                if(dbSekolah[x].some(z => z.nisn === nisnBaru)) { alert("NIS/NISN baru sudah dipakai siswa lain!"); return; }
-            }
+    for (let periode in window.dbRekapBulanan) {
+        if (window.dbRekapBulanan[periode][oldNisn]) {
+            let catatanLama = window.dbRekapBulanan[periode][oldNisn].catatan;
+            window.dbRekapBulanan[periode][nisnBaru] = { nama: namaBaru, kelas: kelas, jk: jkBaru, catatan: catatanLama };
+            if (oldNisn !== nisnBaru) delete window.dbRekapBulanan[periode][oldNisn];
         }
-
-        let indeksMurid = dbSekolah[kelas].findIndex(x => x.nisn === oldNisn);
-        if(indeksMurid !== -1) {
-            dbSekolah[kelas][indeksMurid].nama = namaBaru; dbSekolah[kelas][indeksMurid].nisn = nisnBaru;
-            dbSekolah[kelas][indeksMurid].jk = jkBaru; dbSekolah[kelas][indeksMurid].alamat = alamatBaru;
-        }
-        localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
-
-        dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-        for (let periode in dbRekapBulanan) {
-            if (dbRekapBulanan[periode][oldNisn]) {
-                let catatanLama = dbRekapBulanan[periode][oldNisn].catatan;
-                dbRekapBulanan[periode][nisnBaru] = { nama: namaBaru, kelas: kelas, jk: jkBaru, catatan: catatanLama };
-                if (oldNisn !== nisnBaru) delete dbRekapBulanan[periode][oldNisn];
-            }
-        }
-        localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify(dbRekapBulanan));
-
-        bootstrapModalEdit.hide(); renderTabelMuridAdmin(); renderMasterRekapBulanan(); buatQRAdmin(nisnBaru, namaBaru);
     }
 
-    document.getElementById('form-tambah-murid-admin').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const k = document.getElementById('adm-m-kelas').value;
-        const n = document.getElementById('adm-m-nisn').value.trim();
-        const nm = document.getElementById('adm-m-nama').value.trim();
-        const jk = document.getElementById('adm-m-jk').value;
-        const almt = document.getElementById('adm-m-alamat').value.trim();
-        
-        dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-        for (let x in dbSekolah) { 
-            if(dbSekolah[x].some(z => z.nisn === n)) { alert("NIS/NISN sudah terdaftar!"); return; } 
-        }
-        
-        dbSekolah[k].push({ nisn: n, nama: nm, kelas: k, jk: jk, alamat: almt });
-        localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
-        
+    update(ref(db, "/"), {
+        "edu_db_sekolah": window.dbSekolah,
+        "edu_rekap_bulanan": window.dbRekapBulanan
+    }).then(() => {
+        window.bootstrapModalEdit.hide(); 
+        renderTabelMuridAdmin(); 
+        renderMasterRekapBulanan(); 
+        buatQRAdmin(nisnBaru, namaBaru);
+    });
+}
+
+document.getElementById('form-tambah-murid-admin').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const k = document.getElementById('adm-m-kelas').value;
+    const n = document.getElementById('adm-m-nisn').value.trim();
+    const nm = document.getElementById('adm-m-nama').value.trim();
+    const jk = document.getElementById('adm-m-jk').value;
+    const almt = document.getElementById('adm-m-alamat').value.trim();
+    
+    for (let x in window.dbSekolah) { 
+        if(window.dbSekolah[x].some(z => z.nisn === n)) { alert("NIS/NISN sudah terdaftar!"); return; } 
+    }
+    
+    if(!window.dbSekolah[k]) window.dbSekolah[k] = [];
+    window.dbSekolah[k].push({ nisn: n, nama: nm, kelas: k, jk: jk, alamat: almt });
+
+    set(ref(db, "edu_db_sekolah"), window.dbSekolah).then(() => {
         document.getElementById('adm-filter-kelas').value = k;
         renderTabelMuridAdmin(); renderMasterRekapBulanan(); buatQRAdmin(n, nm);
         document.getElementById('adm-m-nisn').value = ''; document.getElementById('adm-m-nama').value = '';
         document.getElementById('adm-m-jk').value = ''; document.getElementById('adm-m-alamat').value = '';
     });
+});
 
-    function buatQRAdmin(nisn, nama) {
-        document.getElementById('qr-preview-area').classList.remove('d-none');
-        document.getElementById('qr-preview-name').innerText = nama;
-        const b = document.getElementById('qrcode'); b.innerHTML = '';
-        new QRCode(b, { text: nisn, width: 130, height: 130, correctLevel : QRCode.CorrectLevel.H });
-        setTimeout(() => { const img = b.querySelector('img'); const cvs = b.querySelector('canvas'); currentQRDataUrl = img ? img.src : (cvs ? cvs.toDataURL("image/png") : ""); }, 400);
-    }
+window.buatQRAdmin = function(nisn, nama) {
+    document.getElementById('qr-preview-area').classList.remove('d-none');
+    document.getElementById('qr-preview-name').innerText = nama;
+    const b = document.getElementById('qrcode'); b.innerHTML = '';
+    new QRCode(b, { text: nisn, width: 130, height: 130, correctLevel : QRCode.CorrectLevel.H });
+    setTimeout(() => { const img = b.querySelector('img'); const cvs = b.querySelector('canvas'); window.currentQRDataUrl = img ? img.src : (cvs ? cvs.toDataURL("image/png") : ""); }, 400);
+}
 
-    function hapusMuridAdmin(k, n) {
-        if(confirm("Hapus murid ini dari sekolah?")) { 
-            dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-            dbSekolah[k] = dbSekolah[k].filter(x => x.nisn !== n);
-            localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
+window.hapusMuridAdmin = function(k, n) {
+    if(confirm("Hapus murid ini dari sekolah?")) { 
+        window.dbSekolah[k] = window.dbSekolah[k].filter(x => x.nisn !== n);
+        set(ref(db, "edu_db_sekolah"), window.dbSekolah).then(() => {
             renderTabelMuridAdmin(); renderMasterRekapBulanan(); document.getElementById('qr-preview-area').classList.add('d-none'); 
-        }
+        });
     }
+}
 
-    document.getElementById('btn-kunci-form').addEventListener('click', function() {
-        const nama = document.getElementById('g-nama').value.trim();
-        const mapel = document.getElementById('g-mapel').value.trim();
-        const kelas = document.getElementById('g-kelas').value;
-        if(!nama || !mapel || !kelas) { alert("Lengkapi data mengajar!"); return; }
-        
-        const listTerurut = dapatkanDataSiswaUrutAbjad(kelas);
-        if(listTerurut.length === 0) { alert("Siswa di kelas ini kosong!"); return; }
+// ================= ABSENSI HP GURU =================
+document.getElementById('btn-kunci-form').addEventListener('click', function() {
+    const nama = document.getElementById('g-nama').value.trim();
+    const mapel = document.getElementById('g-mapel').value.trim();
+    const kelas = document.getElementById('g-kelas').value;
+    if(!nama || !mapel || !kelas) { alert("Lengkapi data mengajar!"); return; }
+    
+    const listTerurut = dapatkanDataSiswaUrutAbjad(kelas);
+    if(listTerurut.length === 0) { alert("Siswa di kelas ini kosong!"); return; }
 
-        document.getElementById('g-nama').disabled = true; document.getElementById('g-mapel').disabled = true;
-        document.getElementById('g-kelas').disabled = true; document.getElementById('g-tanggal').disabled = true; document.getElementById('g-waktu').disabled = true;
-        this.classList.add('d-none'); document.getElementById('btn-reset-form').classList.remove('d-none');
-        document.getElementById('wrapper-kamera').classList.remove('disabled-view');
-        document.getElementById('btn-download-pdf-guru').disabled = false;
-        document.getElementById('info-badge-kelas').innerText = kelas;
-        document.getElementById('info-badge-kelas').className = "badge bg-success rounded-pill";
+    document.getElementById('g-nama').disabled = true; document.getElementById('g-mapel').disabled = true;
+    document.getElementById('g-kelas').disabled = true; document.getElementById('g-tanggal').disabled = true; document.getElementById('g-waktu').disabled = true;
+    this.classList.add('d-none'); document.getElementById('btn-reset-form').classList.remove('d-none');
+    document.getElementById('wrapper-kamera').classList.remove('disabled-view');
+    document.getElementById('btn-download-pdf-guru').disabled = false;
+    document.getElementById('info-badge-kelas').innerText = kelas;
+    document.getElementById('info-badge-kelas').className = "badge bg-success rounded-pill";
 
-        dataAbsensiHariIni = listTerurut.map(m => ({ nisn: m.nisn, nama: m.nama, kelas: m.kelas, jk: m.jk || 'L', status: "Alpha" }));
-        renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan(); aktifkanKameraHP();
+    window.dataAbsensiHariIni = listTerurut.map(m => ({ nisn: m.nisn, nama: m.nama, kelas: m.kelas, jk: m.jk || 'L', status: "Alpha" }));
+    renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan(); aktifkanKameraHP();
+});
+
+function aktifkanKameraHP() {
+    const fd = document.getElementById('scan-feedback');
+    fd.className = "alert alert-warning mt-2 mb-0 py-2 small fw-semibold"; fd.innerText = "⏳ Membuka kamera...";
+
+    function sukses(teks) {
+        let bersihTeks = teks.split('/')[0].trim();
+        let m = window.dataAbsensiHariIni.find(x => x.nisn.split('/')[0].trim() === bersihTeks);
+        if (m) {
+            if(m.status === "Hadir") { fd.innerHTML = `⚠️ <b>${m.nama}</b> sudah absen.`; } 
+            else {
+                m.status = "Hadir";
+                fd.className = "alert alert-success mt-2 mb-0 py-2 small fw-semibold"; fd.innerHTML = `🎉 Absen Tercatat: <b>${m.nama}</b>`;
+                renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan();
+                const pop = document.getElementById('success-overlay');
+                document.getElementById('pop-nama-murid').innerText = m.nama;
+                pop.classList.remove('d-none'); setTimeout(() => { pop.classList.add('d-none'); }, 1200);
+                if (navigator.vibrate) navigator.vibrate(150);
+                try { new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav').play(); } catch(e){}
+            }
+        } else { fd.innerHTML = `❌ QR tidak valid untuk kelas ini.`; }
+    }
+    if(!window.html5Qrcode) window.html5Qrcode = new Html5Qrcode("reader");
+    window.html5Qrcode.start({ facingMode: "environment" }, { fps: 22, qrbox: { width: 220, height: 220 } }, sukses, () => {}).then(() => {
+        fd.className = "alert alert-success mt-2 mb-0 py-2 small bg-success text-white fw-bold"; fd.innerHTML = "🟢 Kamera Aktif! Silahkan scan QR murid.";
+    }).catch(() => { fd.className = "alert alert-danger mt-2 mb-0 py-2 small"; fd.innerHTML = "❌ Lensa gagal diakses."; });
+}
+
+function renderTabelAbsensiGuru() {
+    const tbody = document.getElementById('tabel-rekap-absensi-guru'); tbody.innerHTML = '';
+    window.dataAbsensiHariIni.forEach((m, idx) => {
+        let c = m.status === "Hadir" ? "bg-success-subtle text-success" : (m.status === "Sakit" ? "bg-warning-subtle text-warning-emphasis" : (m.status === "Izin" ? "bg-info-subtle text-info-emphasis" : "bg-danger-subtle text-danger"));
+        tbody.innerHTML += `<tr><td><b>${m.nama}</b><br><small class="text-muted">NISN: ${m.nisn}</small></td><td><select class="form-select form-select-sm fw-bold ${c}" onchange="gantiStatusManual(${idx}, this.value)"><option value="Hadir" ${m.status==='Hadir'?'selected':''}>Hadir</option><option value="Sakit" ${m.status==='Sakit'?'selected':''}>Sakit</option><option value="Izin" ${m.status==='Izin'?'selected':''}>Izin</option><option value="Alpha" ${m.status==='Alpha'?'selected':''}>Alpha</option></select></td></tr>`;
+    });
+}
+
+window.gantiStatusManual = function(idx, v) {
+    window.dataAbsensiHariIni[idx].status = v; renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan();
+}
+
+document.getElementById('btn-reset-form').addEventListener('click', function() {
+    document.getElementById('g-nama').disabled = false; document.getElementById('g-mapel').disabled = false; document.getElementById('g-kelas').disabled = false; document.getElementById('g-tanggal').disabled = false; document.getElementById('g-waktu').disabled = false;
+    this.classList.add('d-none'); document.getElementById('btn-kunci-form').classList.remove('d-none');
+    document.getElementById('wrapper-kamera').classList.add('disabled-view'); document.getElementById('btn-download-pdf-guru').disabled = true;
+    if(window.html5Qrcode && window.html5Qrcode.isScanning) window.html5Qrcode.stop().then(() => { document.getElementById('reader').innerHTML = ''; });
+    window.dataAbsensiHariIni = []; document.getElementById('tabel-rekap-absensi-guru').innerHTML = `<tr><td colspan="2" class="text-center text-muted py-4">Belum ada kelas aktif yang dikunci.</td></tr>`;
+});
+
+function simpanLogKeDatabaseBulanan() {
+    const tglInput = document.getElementById('g-tanggal').value; if(!tglInput) return;
+    const parts = tglInput.split('-'); const periode = `${parts[0]}-${parts[1]}`; const tanggalHari = parseInt(parts[2], 10);
+
+    if (!window.dbRekapBulanan[periode]) window.dbRekapBulanan[periode] = {};
+
+    window.dataAbsensiHariIni.forEach(m => {
+        if (!window.dbRekapBulanan[periode][m.nisn]) {
+            window.dbRekapBulanan[periode][m.nisn] = { nama: m.nama, kelas: m.kelas, jk: m.jk, catatan: {} };
+        }
+        if(!window.dbRekapBulanan[periode][m.nisn].catatan) window.dbRekapBulanan[periode][m.nisn].catatan = {};
+        window.dbRekapBulanan[periode][m.nisn].catatan[tanggalHari] = m.status;
+    });
+    
+    set(ref(db, "edu_rekap_bulanan"), window.dbRekapBulanan);
+}
+
+// ================= RENDER MATRIKS REKAP UTAMA =================
+window.renderMasterRekapBulanan = function() {
+    const kelasTerpilih = document.getElementById('rekap-bulan-kelas').value;
+    const periodeTerpilih = document.getElementById('rekap-bulan-periode').value;
+    if(!periodeTerpilih) return;
+
+    const theadRow = document.getElementById('rekap-bulan-thead-hari');
+    const tbody = document.getElementById('rekap-bulan-tbody-murid');
+    theadRow.innerHTML = ''; tbody.innerHTML = '';
+    
+    const [tahun, bulan] = periodeTerpilih.split('-'); const jumlahHari = new Date(tahun, bulan, 0).getDate();
+
+    let headerHTML = `<th class="cell-name">Nama Siswa (A-Z)</th><th style="min-width:35px;">L/P</th>`;
+    for(let i = 1; i <= jumlahHari; i++) { headerHTML += `<th class="cell-date">${i}</th>`; }
+    headerHTML += `<th class="bg-success text-white">H</th><th class="bg-info text-white">I</th><th class="bg-warning text-dark">S</th><th class="bg-danger text-white">A</th>`;
+    theadRow.innerHTML = headerHTML;
+
+    const dataBulanIni = window.dbRekapBulanan[periodeTerpilih] || {};
+    const muridKelasAsli = dapatkanDataSiswaUrutAbjad(kelasTerpilih);
+
+    let adaDataAbsensi = false;
+    muridKelasAsli.forEach(m => {
+        if(dataBulanIni[m.nisn] && dataBulanIni[m.nisn].catatan && Object.keys(dataBulanIni[m.nisn].catatan).length > 0) adaDataAbsensi = true;
     });
 
-    function aktifkanKameraHP() {
-        const fd = document.getElementById('scan-feedback');
-        fd.className = "alert alert-warning mt-2 mb-0 py-2 small fw-semibold"; fd.innerText = "⏳ Membuka kamera...";
+    if (muridKelasAsli.length === 0 || !adaDataAbsensi) {
+        tbody.innerHTML = `<tr><td colspan="${jumlahHari + 6}" class="text-center text-muted py-4">Belum ada rekap data masuk pada bulan ini.</td></tr>`; return;
+    }
 
-        function sukses(teks) {
-            let bersihTeks = teks.split('/')[0].trim();
-            let m = dataAbsensiHariIni.find(x => x.nisn.split('/')[0].trim() === bersihTeks);
-            if (m) {
-                if(m.status === "Hadir") { fd.innerHTML = `⚠️ <b>${m.nama}</b> sudah absen.`; } 
-                else {
-                    m.status = "Hadir";
-                    fd.className = "alert alert-success mt-2 mb-0 py-2 small fw-semibold"; fd.innerHTML = `🎉 Absen Tercatat: <b>${m.nama}</b>`;
-                    renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan();
-                    const pop = document.getElementById('success-overlay');
-                    document.getElementById('pop-nama-murid').innerText = m.nama;
-                    pop.classList.remove('d-none'); setTimeout(() => { pop.classList.add('d-none'); }, 1200);
-                    if (navigator.vibrate) navigator.vibrate(150);
-                    try { new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav').play(); } catch(e){}
-                }
-            } else { fd.innerHTML = `❌ QR tidak valid untuk kelas ini.`; }
+    muridKelasAsli.forEach(m => {
+        const jKString = (m.jk === 'L' || m.jk === 'Laki-laki') ? 'L' : 'P';
+        let rowHTML = `<td class="cell-name"><b>${m.nama}</b></td><td><span class="badge bg-light text-dark">${jKString}</span></td>`;
+        let tHadir = 0, tSakit = 0, tIzin = 0, tAlpha = 0;
+        const riwayatSiswa = (dataBulanIni[m.nisn] && dataBulanIni[m.nisn].catatan) ? dataBulanIni[m.nisn].catatan : {};
+
+        for(let d = 1; d <= jumlahHari; d++) {
+            const statusTanggal = riwayatSiswa[d];
+            if (statusTanggal === "Hadir") { rowHTML += `<td class="b-h">H</td>`; tHadir++; } 
+            else if (statusTanggal === "Sakit") { rowHTML += `<td class="b-s">S</td>`; tSakit++; } 
+            else if (statusTanggal === "Izin") { rowHTML += `<td class="b-i">I</td>`; tIzin++; } 
+            else if (statusTanggal === "Alpha") { rowHTML += `<td class="b-a">A</td>`; tAlpha++; } 
+            else { rowHTML += `<td class="text-muted">-</td>`; }
         }
-        if(!html5Qrcode) html5Qrcode = new Html5Qrcode("reader");
-        html5Qrcode.start({ facingMode: "environment" }, { fps: 22, qrbox: { width: 220, height: 220 } }, sukses, () => {}).then(() => {
-            fd.className = "alert alert-success mt-2 mb-0 py-2 small bg-success text-white fw-bold"; fd.innerHTML = "🟢 Kamera Aktif! Silahkan scan QR murid.";
-        }).catch(() => { fd.className = "alert alert-danger mt-2 mb-0 py-2 small"; fd.innerHTML = "❌ Lensa gagal diakses."; });
-    }
-
-    function renderTabelAbsensiGuru() {
-        const tbody = document.getElementById('tabel-rekap-absensi-guru'); tbody.innerHTML = '';
-        dataAbsensiHariIni.forEach((m, idx) => {
-            let c = m.status === "Hadir" ? "bg-success-subtle text-success" : (m.status === "Sakit" ? "bg-warning-subtle text-warning-emphasis" : (m.status === "Izin" ? "bg-info-subtle text-info-emphasis" : "bg-danger-subtle text-danger"));
-            tbody.innerHTML += `<tr><td><b>${m.nama}</b><br><small class="text-muted">NISN: ${m.nisn}</small></td><td><select class="form-select form-select-sm fw-bold ${c}" onchange="gantiStatusManual(${idx}, this.value)"><option value="Hadir" ${m.status==='Hadir'?'selected':''}>Hadir</option><option value="Sakit" ${m.status==='Sakit'?'selected':''}>Sakit</option><option value="Izin" ${m.status==='Izin'?'selected':''}>Izin</option><option value="Alpha" ${m.status==='Alpha'?'selected':''}>Alpha</option></select></td></tr>`;
-        });
-    }
-
-    function gantiStatusManual(idx, v) {
-        dataAbsensiHariIni[idx].status = v; renderTabelAbsensiGuru(); simpanLogKeDatabaseBulanan();
-    }
-
-    document.getElementById('btn-reset-form').addEventListener('click', function() {
-        document.getElementById('g-nama').disabled = false; document.getElementById('g-mapel').disabled = false; document.getElementById('g-kelas').disabled = false; document.getElementById('g-tanggal').disabled = false; document.getElementById('g-waktu').disabled = false;
-        this.classList.add('d-none'); document.getElementById('btn-kunci-form').classList.remove('d-none');
-        document.getElementById('wrapper-kamera').classList.add('disabled-view'); document.getElementById('btn-download-pdf-guru').disabled = true;
-        if(html5Qrcode && html5Qrcode.isScanning) html5Qrcode.stop().then(() => { document.getElementById('reader').innerHTML = ''; });
-        dataAbsensiHariIni = []; document.getElementById('tabel-rekap-absensi-guru').innerHTML = `<tr><td colspan="2" class="text-center text-muted py-4">Belum ada kelas aktif yang dikunci.</td></tr>`;
+        rowHTML += `<td class="fw-bold text-success">${tHadir}</td><td class="fw-bold text-info-emphasis">${tIzin}</td><td class="fw-bold text-warning-emphasis">${tSakit}</td><td class="fw-bold text-danger">${tAlpha}</td>`;
+        tbody.innerHTML += `<tr>${rowHTML}</tr>`;
     });
+}
 
-    function simpanLogKeDatabaseBulanan() {
-        const tglInput = document.getElementById('g-tanggal').value; if(!tglInput) return;
-        const parts = tglInput.split('-'); const periode = `${parts[0]}-${parts[1]}`; const tanggalHari = parseInt(parts[2], 10);
+window.pindahkanBulanTerpilihKeSampah = function() {
+    const kelasTerpilih = document.getElementById('rekap-bulan-kelas').value;
+    const periodeTerpilih = document.getElementById('rekap-bulan-periode').value;
+    
+    if (!window.dbRekapBulanan[periodeTerpilih]) { alert("Tidak ditemukan data absensi apapun pada periode bulan ini."); return; }
 
-        dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-        if (!dbRekapBulanan[periode]) dbRekapBulanan[periode] = {};
-
-        dataAbsensiHariIni.forEach(m => {
-            if (!dbRekapBulanan[periode][m.nisn]) {
-                dbRekapBulanan[periode][m.nisn] = { nama: m.nama, kelas: m.kelas, jk: m.jk, catatan: {} };
-            }
-            dbRekapBulanan[periode][m.nisn].catatan[tanggalHari] = m.status;
-        });
-        localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify(dbRekapBulanan));
+    let dataSpesifikKelas = {};
+    for (let nisn in window.dbRekapBulanan[periodeTerpilih]) {
+        if (window.dbRekapBulanan[periodeTerpilih][nisn].kelas === kelasTerpilih) {
+            dataSpesifikKelas[nisn] = window.dbRekapBulanan[periodeTerpilih][nisn];
+        }
     }
 
-    function renderMasterRekapBulanan() {
-        const kelasTerpilih = document.getElementById('rekap-bulan-kelas').value;
-        const periodeTerpilih = document.getElementById('rekap-bulan-periode').value;
-        if(!periodeTerpilih) return;
+    if (Object.keys(dataSpesifikKelas).length === 0) { alert(`Data absensi untuk ${kelasTerpilih} di bulan ini memang kosong.`); return; }
 
-        const theadRow = document.getElementById('rekap-bulan-thead-hari');
-        const tbody = document.getElementById('rekap-bulan-tbody-murid');
-        if (!theadRow || !tbody) return;
-        theadRow.innerHTML = ''; tbody.innerHTML = '';
+    if (confirm(`Apakah Anda yakin ingin menghapus & memindahkan rekap ${kelasTerpilih} periode ${periodeTerpilih} ke Menu Sampah?`)) {
+        let listSampah = Array.isArray(window.dbSampahRekap) ? window.dbSampahRekap : [];
+        listSampah.push({ idSampah: 'REKAP_' + Date.now(), periode: periodeTerpilih, kelas: kelasTerpilih, kontenData: dataSpesifikKelas });
+
+        for (let nisn in dataSpesifikKelas) { delete window.dbRekapBulanan[periodeTerpilih][nisn]; }
+        if (Object.keys(window.dbRekapBulanan[periodeTerpilih]).length === 0) { delete window.dbRekapBulanan[periodeTerpilih]; }
         
-        const [tahun, bulan] = periodeTerpilih.split('-'); const jumlahHari = new Date(tahun, bulan, 0).getDate();
-
-        let headerHTML = `<th class="cell-name">Nama Siswa (A-Z)</th><th style="min-width:35px;">L/P</th>`;
-        for(let i = 1; i <= jumlahHari; i++) { headerHTML += `<th class="cell-date">${i}</th>`; }
-        headerHTML += `<th class="bg-success text-white">H</th><th class="bg-info text-white">I</th><th class="bg-warning text-dark">S</th><th class="bg-danger text-white">A</th>`;
-        theadRow.innerHTML = headerHTML;
-
-        dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-        const dataBulanIni = dbRekapBulanan[periodeTerpilih] || {};
-        const muridKelasAsli = dapatkanDataSiswaUrutAbjad(kelasTerpilih);
-
-        let adaDataAbsensi = false;
-        muridKelasAsli.forEach(m => {
-            if(dataBulanIni[m.nisn] && Object.keys(dataBulanIni[m.nisn].catatan).length > 0) adaDataAbsensi = true;
-        });
-
-        if (muridKelasAsli.length === 0 || !adaDataAbsensi) {
-            tbody.innerHTML = `<tr><td colspan="${jumlahHari + 6}" class="text-center text-muted py-4">Belum ada rekap data masuk pada bulan ini.</td></tr>`; return;
-        }
-
-        muridKelasAsli.forEach(m => {
-            const jKString = (m.jk === 'L' || m.jk === 'Laki-laki') ? 'L' : 'P';
-            let rowHTML = `<td class="cell-name"><b>${m.nama}</b></td><td><span class="badge bg-light text-dark">${jKString}</span></td>`;
-            let tHadir = 0, tSakit = 0, tIzin = 0, tAlpha = 0;
-            const riwayatSiswa = dataBulanIni[m.nisn] ? dataBulanIni[m.nisn].catatan : {};
-
-            for(let d = 1; d <= jumlahHari; d++) {
-                const statusTanggal = riwayatSiswa[d];
-                if (statusTanggal === "Hadir") { rowHTML += `<td class="b-h">H</td>`; tHadir++; } 
-                else if (statusTanggal === "Sakit") { rowHTML += `<td class="b-s">S</td>`; tSakit++; } 
-                else if (statusTanggal === "Izin") { rowHTML += `<td class="b-i">I</td>`; tIzin++; } 
-                else if (statusTanggal === "Alpha") { rowHTML += `<td class="b-a">A</td>`; tAlpha++; } 
-                else { rowHTML += `<td class="text-muted">-</td>`; }
-            }
-            rowHTML += `<td class="fw-bold text-success">${tHadir}</td><td class="fw-bold text-info-emphasis">${tIzin}</td><td class="fw-bold text-warning-emphasis">${tSakit}</td><td class="fw-bold text-danger">${tAlpha}</td>`;
-            tbody.innerHTML += `<tr>${rowHTML}</tr>`;
-        });
-    }
-
-    function pindahkanBulanTerpilihKeSampah() {
-        const kelasTerpilih = document.getElementById('rekap-bulan-kelas').value;
-        const periodeTerpilih = document.getElementById('rekap-bulan-periode').value;
-        
-        dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-        if (!dbRekapBulanan[periodeTerpilih]) { alert("Tidak ditemukan data absensi apapun pada periode bulan ini."); return; }
-
-        let dataSpesifikKelas = {};
-        for (let nisn in dbRekapBulanan[periodeTerpilih]) {
-            if (dbRekapBulanan[periodeTerpilih][nisn].kelas === kelasTerpilih) {
-                dataSpesifikKelas[nisn] = dbRekapBulanan[periodeTerpilih][nisn];
-            }
-        }
-
-        if (Object.keys(dataSpesifikKelas).length === 0) { alert(`Data absensi untuk ${kelasTerpilih} di bulan ini memang kosong.`); return; }
-
-        if (confirm(`Apakah Anda yakin ingin menghapus & memindahkan rekap ${kelasTerpilih} periode ${periodeTerpilih} ke Menu Sampah?`)) {
-            dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-            dbSampahRekap.push({ idSampah: 'REKAP_' + Date.now(), periode: periodeTerpilih, kelas: kelasTerpilih, kontenData: dataSpesifikKelas });
-            localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify(dbSampahRekap));
-
-            for (let nisn in dataSpesifikKelas) { delete dbRekapBulanan[periodeTerpilih][nisn]; }
-            if (Object.keys(dbRekapBulanan[periodeTerpilih]).length === 0) { delete dbRekapBulanan[periodeTerpilih]; }
-            localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify(dbRekapBulanan));
-            
+        set(ref(db, "edu_rekap_bulanan"), window.dbRekapBulanan);
+        set(ref(db, "edu_sampah_rekap"), listSampah).then(() => {
             alert("Rekap bulan terpilih berhasil dipindahkan ke Sampah!");
             renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
-        }
-    }
-
-    function renderMenuSampahAdmin() {
-        const tbody = document.getElementById('sampah-tbody-list'); if(!tbody) return;
-        tbody.innerHTML = '';
-        dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-        const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-
-        if (dbSampahRekap.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-4"><i class="fa-solid fa-trash-arrow-up me-1"></i> Folder sampah kosong. Tidak ada file cadangan saat ini.</td></tr>`; return;
-        }
-
-        dbSampahRekap.forEach(item => {
-            let barisJudul = "";
-            
-            if (item.idSampah.startsWith("MASS_SISWA")) {
-                barisJudul = `<span class="fw-bold text-danger"><i class="fa-solid fa-users-slash me-2"></i>Data Siswa Massal</span> <small class="text-muted">(${item.kontenData.length} Murid)</small>`;
-            } else {
-                const [thn, bln] = item.periode.split('-'); 
-                const namaBulanCantik = `${namaBulanIndo[parseInt(bln, 10) - 1]} ${thn}`;
-                barisJudul = `<span class="fw-bold text-secondary"><i class="fa-solid fa-calendar-minus me-2"></i>Absensi: ${namaBulanCantik}</span> <small class="text-muted">(${item.periode})</small>`;
-            }
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${barisJudul}</td>
-                    <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">${item.kelas}</span></td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-success fw-medium py-1 px-2 me-1" onclick="puluhkanSampahRekap('${item.idSampah}')"><i class="fa-solid fa-arrow-rotate-left me-1"></i> Pulihkan</button>
-                        <button class="btn btn-sm btn-danger fw-medium py-1 px-2" onclick="hapusSampahPermanenSatuBulan('${item.idSampah}')"><i class="fa-solid fa-ban me-1"></i> Musnahkan</button>
-                    </td>
-                </tr>`;
         });
     }
+}
 
-    function puluhkanSampahRekap(idSampah) {
-        dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-        let item = dbSampahRekap.find(x => x.idSampah === idSampah); if (!item) return;
+// ================= RENDER DAN PENGELOLAAN MENU SAMPAH TERPADU (v7.6) =================
+window.renderMenuSampahAdmin = function() {
+    const tbody = document.getElementById('sampah-tbody-list'); tbody.innerHTML = '';
+    const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-        if (idSampah.startsWith("MASS_SISWA")) {
-            dbSekolah = JSON.parse(localStorage.getItem('edu_db_sekolah_v5')) || defaultDB;
-            if (!dbSekolah[item.kelas]) dbSekolah[item.kelas] = [];
-            
-            item.kontenData.forEach(siswaBaru => {
-                if(!dbSekolah[item.kelas].some(s => s.nisn === siswaBaru.nisn)) {
-                    dbSekolah[item.kelas].push(siswaBaru);
-                }
-            });
-            localStorage.setItem('edu_db_sekolah_v5', JSON.stringify(dbSekolah));
-            document.getElementById('adm-filter-kelas').value = item.kelas;
-            alert(`Sukses memulihkan data siswa ${item.kelas} kembali ke database aktif!`);
+    if (!window.dbSampahRekap || Object.keys(window.dbSampahRekap).length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-4"><i class="fa-solid fa-trash-arrow-up me-1"></i> Folder sampah kosong. Tidak ada file cadangan saat ini.</td></tr>`; return;
+    }
 
+    Object.values(window.dbSampahRekap).forEach(item => {
+        let barisJudul = "";
+        if (item.idSampah.startsWith("MASS_SISWA")) {
+            barisJudul = `<span class="fw-bold text-danger"><i class="fa-solid fa-users-slash me-2"></i>Data Siswa Massal</span> <small class="text-muted">(${item.kontenData.length} Murid)</small>`;
         } else {
-            dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-            if (!dbRekapBulanan[item.periode]) dbRekapBulanan[item.periode] = {};
-            for (let nisn in item.kontenData) { dbRekapBulanan[item.periode][nisn] = item.kontenData[nisn]; }
-            localStorage.setItem('edu_rekap_bulanan_v5', JSON.stringify(dbRekapBulanan));
-            alert(`Rekap ${item.kelas} periode ${item.periode} telah sukses dikembalikan ke tabel utama!`);
+            const [thn, bln] = item.periode.split('-'); 
+            const namaBulanCantik = `${namaBulanIndo[parseInt(bln, 10) - 1]} ${thn}`;
+            barisJudul = `<span class="fw-bold text-secondary"><i class="fa-solid fa-calendar-minus me-2"></i>Absensi: ${namaBulanCantik}</span> <small class="text-muted">(${item.periode})</small>`;
         }
 
-        dbSampahRekap = dbSampahRekap.filter(x => x.idSampah !== idSampah);
-        localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify(dbSampahRekap));
+        tbody.innerHTML += `
+            <tr>
+                <td>${barisJudul}</td>
+                <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">${item.kelas}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-success fw-medium py-1 px-2 me-1" onclick="puluhkanSampahRekap('${item.idSampah}')"><i class="fa-solid fa-arrow-rotate-left me-1"></i> Pulihkan</button>
+                    <button class="btn btn-sm btn-danger fw-medium py-1 px-2" onclick="hapusSampahPermanenSatuBulan('${item.idSampah}')"><i class="fa-solid fa-ban me-1"></i> Musnahkan</button>
+                </td>
+            </tr>`;
+    });
+}
+
+window.puluhkanSampahRekap = function(idSampah) {
+    let listSampah = Object.values(window.dbSampahRekap);
+    let item = listSampah.find(x => x.idSampah === idSampah); if (!item) return;
+
+    if (idSampah.startsWith("MASS_SISWA")) {
+        if (!window.dbSekolah[item.kelas]) window.dbSekolah[item.kelas] = [];
         
+        item.kontenData.forEach(siswaBaru => {
+            if(!window.dbSekolah[item.kelas].some(s => s.nisn === siswaBaru.nisn)) {
+                window.dbSekolah[item.kelas].push(siswaBaru);
+            }
+        });
+        set(ref(db, "edu_db_sekolah"), window.dbSekolah);
+        document.getElementById('adm-filter-kelas').value = item.kelas;
+        alert(`Sukses memulihkan data siswa ${item.kelas} kembali ke database aktif!`);
+    } else {
+        if (!window.dbRekapBulanan[item.periode]) window.dbRekapBulanan[item.periode] = {};
+        for (let nisn in item.kontenData) { window.dbRekapBulanan[item.periode][nisn] = item.kontenData[nisn]; }
+        set(ref(db, "edu_rekap_bulanan"), window.dbRekapBulanan);
+        alert(`Rekap ${item.kelas} periode ${item.periode} telah sukses dikembangkan ke tabel utama!`);
+    }
+
+    let sampahUpdate = listSampah.filter(x => x.idSampah !== idSampah);
+    set(ref(db, "edu_sampah_rekap"), sampahUpdate).then(() => {
         renderMenuSampahAdmin(); renderTabelMuridAdmin(); renderMasterRekapBulanan(); perbaruiBadgeJumlahSampah();
-    }
+    });
+}
 
-    function hapusSampahPermanenSatuBulan(idSampah) {
-        if (confirm("🚨 PERINGATAN: Menghapus berkas dari sampah akan memusnahkan data ini secara permanen dari browser selamanya! Lanjutkan?")) {
-            dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-            dbSampahRekap = dbSampahRekap.filter(x => x.idSampah !== idSampah);
-            localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify(dbSampahRekap));
+window.hapusSampahPermanenSatuBulan = function(idSampah) {
+    if (confirm("🚨 PERINGATAN: Menghapus berkas dari sampah akan memusnahkan data ini secara permanen dari browser selamanya! Lanjutkan?")) {
+        let sampahUpdate = Object.values(window.dbSampahRekap).filter(x => x.idSampah !== idSampah);
+        set(ref(db, "edu_sampah_rekap"), sampahUpdate).then(() => {
             renderMenuSampahAdmin(); perbaruiBadgeJumlahSampah();
-        }
+        });
     }
+}
 
-    function kosongkanSemuaSampahPermanen() {
-        dbSampahRekap = JSON.parse(localStorage.getItem('edu_sampah_rekap_v7')) || [];
-        if (dbSampahRekap.length === 0) { alert("Folder sampah memang sudah kosong."); return; }
-        if (confirm("💥 AWAS! Apakah Anda benar-benar ingin mengosongkan folder sampah? Semua berkas backup rekap & data siswa di dalamnya akan HILANG TOTAL secara permanen!")) {
-            localStorage.setItem('edu_sampah_rekap_v7', JSON.stringify([])); alert("Folder sampah berhasil dikosongkan total.");
+window.kosongkanSemuaSampahPermanen = function() {
+    if (!window.dbSampahRekap || Object.keys(window.dbSampahRekap).length === 0) { alert("Folder sampah memang sudah kosong."); return; }
+    if (confirm("💥 AWAS! Apakah Anda benar-benar ingin mengosongkan folder sampah? Semua berkas backup rekap & data siswa di dalamnya akan HILANG TOTAL secara permanen!")) {
+        remove(ref(db, "edu_sampah_rekap")).then(() => {
+            alert("Folder sampah berhasil dikosongkan total.");
             renderMenuSampahAdmin(); perbaruiBadgeJumlahSampah();
-        }
+        });
     }
+}
 
-    document.getElementById('btn-download-qr').addEventListener('click', function() {
-        const qrContainer = document.getElementById('qrcode');
-        if (!qrContainer) return;
+document.getElementById('btn-download-qr').addEventListener('click', function() {
+    const qrContainer = document.getElementById('qrcode');
+    if (!qrContainer) return;
 
-        const imgElement = qrContainer.querySelector('img');
-        const canvasElement = qrContainer.querySelector('canvas');
-        let base64ImageSrc = "";
+    const imgElement = qrContainer.querySelector('img');
+    const canvasElement = qrContainer.querySelector('canvas');
+    let base64ImageSrc = "";
+    
+    if (imgElement && imgElement.src && imgElement.src.startsWith('data:image')) {
+        base64ImageSrc = imgElement.src;
+    } else if (canvasElement) {
+        base64ImageSrc = canvasElement.toDataURL("image/png");
+    }
+    
+    if (base64ImageSrc) {
+        const namaSiswaRaw = document.getElementById('qr-preview-name').innerText || 'QR_Siswa';
+        const namaSiswaBersih = namaSiswaRaw.trim().replace(/[^a-zA-Z0-9\s-_]/g, '');
+        const formatNamaFile = `QR_${namaSiswaBersih.replace(/\s+/g, '_')}.png`;
         
-        if (imgElement && imgElement.src && imgElement.src.startsWith('data:image')) {
-            base64ImageSrc = imgElement.src;
-        } else if (canvasElement) {
-            base64ImageSrc = canvasElement.toDataURL("image/png");
+        const linkDownload = document.createElement('a');
+        linkDownload.href = base64ImageSrc;
+        linkDownload.download = formatNamaFile;
+        
+        document.body.appendChild(linkDownload);
+        linkDownload.click();
+        document.body.removeChild(linkDownload);
+    } else {
+        alert('Gagal mengunduh! Silakan pilih siswa terlebih dahulu hingga QR Code muncul di layar.');
+    }
+});
+
+// ================= EKSPOR LAPORAN PDF TERBARU =================
+window.downloadPDFBulananAdmin = function() {
+    const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
+    const kelas = document.getElementById('rekap-bulan-kelas').value; const periode = document.getElementById('rekap-bulan-periode').value;
+    
+    const namaWali = window.dbWaliKelas[kelas] || '-'; const tapelAktif = localStorage.getItem('edu_sch_tapel') || '2025/2026'; const semesterAktif = localStorage.getItem('edu_sch_semester') || 'Semester Ganjil';
+
+    const [tahun, bulan] = periode.split('-'); const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const textBulanSaja = namaBulanIndo[parseInt(bulan, 10) - 1]; const jumlahHari = new Date(tahun, bulan, 0).getDate();
+
+    doc.setFont("times", "bold"); doc.setFontSize(12); doc.setTextColor(0); const centerX = 297 / 2;
+    doc.text("DAFTAR HADIR SISWA", centerX, 11, { align: "center" }); doc.text("SD NEGERI 1 GUNUNG MALANG", centerX, 17, { align: "center" }); doc.text(`TAHUN PELAJARAN ${tapelAktif}`, centerX, 23, { align: "center" });
+    
+    doc.setFont("times", "normal"); doc.setFontSize(9.5); doc.setTextColor(50);
+    doc.text(`Jenis Rombel: Kelas Utama   |   Nama Rombel: ${kelas.replace(" SD", "")}   |   (${semesterAktif})   |   Wali Kelas: ${namaWali}`, centerX, 29, { align: "center" });
+
+    let rowHeader1 = [ 'NOMOR', '', 'NAMA SISWA', 'L/P', `Bulan ${textBulanSaja} ${tahun}`, ...Array(30).fill(''), 'Total', '', '', '' ];
+    let rowHeader2 = [ 'URUT', 'NISN / NIS', '', '', 'Tanggal' ];
+    for (let d = 1; d <= 31; d++) { rowHeader2[3 + d] = String(d); }
+    rowHeader2.push('H', 'I', 'S', 'A');
+
+    const dataBulanIni = window.dbRekapBulanan[periode] || {}; const muridKelasAsli = dapatkanDataSiswaUrutAbjad(kelas);
+    
+    let bodyRows = []; let jmlLaki = 0; let jmlPerempuan = 0;
+    muridKelasAsli.forEach((m, idx) => {
+        const jenisKelaminSiswa = (m.jk === 'L' || m.jk === 'Laki-laki') ? 'L' : 'P';
+        if (jenisKelaminSiswa === 'L') jmlLaki++; else jmlPerempuan++;
+
+        let barisData = [ String(idx + 1), m.nisn, m.nama, jenisKelaminSiswa ];
+        let h = 0, i = 0, s = 0, a = 0; const riwayat = (dataBulanIni[m.nisn] && dataBulanIni[m.nisn].catatan) ? dataBulanIni[m.nisn].catatan : {};
+
+        for(let d = 1; d <= 31; d++) {
+            if(d <= jumlahHari) {
+                const st = riwayat[d] || '';
+                if(st === 'Hadir') { barisData.push('H'); h++; } else if(st === 'Izin') { barisData.push('I'); i++; } else if(st === 'Sakit') { barisData.push('S'); s++; } else if(st === 'Alpha') { barisData.push('A'); a++; } else { barisData.push(''); }
+            } else { barisData.push(''); }
         }
-        
-        if (base64ImageSrc) {
-            const namaSiswaRaw = document.getElementById('qr-preview-name').innerText || 'QR_Siswa';
-            const namaSiswaBersih = namaSiswaRaw.trim().replace(/[^a-zA-Z0-9\s-_]/g, '');
-            const formatNamaFile = `QR_${namaSiswaBersih.replace(/\s+/g, '_')}.png`;
-            
-            const linkDownload = document.createElement('a');
-            linkDownload.href = base64ImageSrc;
-            linkDownload.download = formatNamaFile;
-            
-            document.body.appendChild(linkDownload);
-            linkDownload.click();
-            document.body.removeChild(linkDownload);
-        } else {
-            alert('Gagal mengunduh! Silakan pilih siswa terlebih dahulu hingga QR Code muncul di layar.');
+        barisData.push(h, i, s, a); bodyRows.push(barisData);
+    });
+
+    doc.autoTable({
+        startY: 33, head: [rowHeader1, rowHeader2], body: bodyRows, theme: 'grid',
+        styles: { font: 'times', fontSize: 7.5, cellPadding: 0.8, align: 'center', textColor: [0, 0, 0], lineColor: [140, 140, 140], lineWidth: 0.15, valign: 'middle' },
+        headStyles: { fillColor: [245, 245, 245], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.2, align: 'center' },
+        columnStyles: { 0: { cellWidth: 11, fontStyle: 'bold', align: 'center' }, 1: { cellWidth: 26, align: 'center', fontSize: 6.5 }, 2: { cellWidth: 42, align: 'left' }, 3: { cellWidth: 8, align: 'center' }, 35: { cellWidth: 6.5, fontStyle: 'bold', fillColor: [235, 248, 235], align: 'center' }, 36: { cellWidth: 6.5, fontStyle: 'bold', fillColor: [235, 243, 253], align: 'center' }, 37: { cellWidth: 6.5, fontStyle: 'bold', fillColor: [255, 252, 225], align: 'center' }, 38: { cellWidth: 6.5, fontStyle: 'bold', fillColor: [255, 238, 238], align: 'center' } },
+        didParseCell: function(data) {
+            if (data.section === 'head' && data.row.index === 0) {
+                if (data.column.index === 0) data.cell.rowSpan = 2; if (data.column.index === 1) data.cell.text = ''; if (data.column.index === 2) data.cell.rowSpan = 2; if (data.column.index === 3) data.cell.rowSpan = 2; if (data.column.index === 4) data.cell.colSpan = 31; if (data.column.index === 35) data.cell.colSpan = 4;
+            }
+            if (data.section === 'head' && data.row.index === 1) { if (data.column.index === 1) data.cell.text = 'NISN / NIS'; }
         }
     });
 
-    function downloadPDFBulananAdmin() {
-        const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
-        const kelas = document.getElementById('rekap-bulan-kelas').value; const periode = document.getElementById('rekap-bulan-periode').value;
-        
-        dbWaliKelas = JSON.parse(localStorage.getItem('edu_wali_kelas_v5')) || defaultWali;
-        const namaWali = dbWaliKelas[kelas] || '-'; const tapelAktif = localStorage.getItem('edu_sch_tapel') || '2025/2026'; const semesterAktif = localStorage.getItem('edu_sch_semester') || 'Semester Ganjil';
+    let finalY = doc.lastAutoTable.finalY + 8; if (finalY > 175) { doc.addPage(); finalY = 20; }
+    doc.setFont("times", "normal"); doc.setFontSize(9.5); doc.setTextColor(0);
+    doc.text(`Keterangan Jumlah Siswa:`, 14, finalY); doc.text(`- Siswa Laki-laki (L) : ${jmlLaki} Anak`, 16, finalY + 5); doc.text(`- Siswa Perempuan (P) : ${jmlPerempuan} Anak`, 16, finalY + 10); doc.setFont("times", "bold"); doc.text(`Total Siswa Keseluruhan : ${jmlLaki + jmlPerempuan} Anak`, 16, finalY + 15);
 
-        const [tahun, bulan] = periode.split('-'); const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const textBulanSaja = namaBulanIndo[parseInt(bulan, 10) - 1]; const jumlahHari = new Date(tahun, bulan, 0).getDate();
+    doc.setFont("times", "normal"); const hariCetak = String(new Date().getDate()).padStart(2,'0'); const bulanCetak = namaBulanIndo[new Date().getMonth()]; const tahunCetak = new Date().getFullYear();
+    doc.text(`Gunung Malang, ${hariCetak} ${bulanCetak} ${tahunCetak}`, 230, finalY); doc.text(`Mengetahui,`, 230, finalY + 5); doc.text(`Wali Kelas ${kelas.replace(" SD", "")}`, 230, finalY + 10);
+    doc.line(230, finalY + 30, 280, finalY + 30); doc.setFont("times", "bold"); doc.text(namaWali, 230, finalY + 34);
 
-        doc.setFont("times", "bold"); doc.setFontSize(12); doc.setTextColor(0); const centerX = 297 / 2;
-        doc.text("DAFTAR HADIR SISWA", centerX, 11, { align: "center" }); doc.text("SD NEGERI 1 GUNUNG MALANG", centerX, 17, { align: "center" }); doc.text(`TAHUN PELAJARAN ${tapelAktif}`, centerX, 23, { align: "center" });
-        
-        doc.setFont("times", "normal"); doc.setFontSize(9.5); doc.setTextColor(50);
-        doc.text(`Jenis Rombel: Kelas Utama   |   Nama Rombel: ${kelas.replace(" SD", "")}   |   (${semesterAktif})   |   Wali Kelas: ${namaWali}`, centerX, 29, { align: "center" });
+    doc.save(`Laporan_Bulanan_SDN_1_GM_${kelas.replace(/\s+/g, '_')}_${textBulanSaja}.pdf`);
+}
 
-        let rowHeader1 = [ 'NOMOR', '', 'NAMA SISWA', 'L/P', `Bulan ${textBulanSaja} ${tahun}`, ...Array(30).fill(''), 'Total', '', '', '' ];
-        let rowHeader2 = [ 'URUT', 'NISN / NIS', '', '', 'Tanggal' ];
-        for (let d = 1; d <= 31; d++) { rowHeader2[3 + d] = String(d); }
-        rowHeader2.push('H', 'I', 'S', 'A');
+buatDropdownBulanOtomatis();
+</script>
 
-        dbRekapBulanan = JSON.parse(localStorage.getItem('edu_rekap_bulanan_v5')) || {};
-        const dataBulanIni = dbRekapBulanan[periode] || {}; const muridKelasAsli = dapatkanDataSiswaUrutAbjad(kelas);
-        
-        let bodyRows = []; let jmlLaki = 0; let jmlPerempuan = 0;
-        muridKelasAsli.forEach((m, idx) => {
-            const jenisKelaminSiswa = (m.jk === 'L' || m.jk === 'Laki-laki') ? 'L' : 'P';
-            if (jenisKelaminSiswa === 'L') jmlLaki++; else jmlPerempuan++;
-
-            let barisData = [ String(idx + 1), m.nisn, m.nama, jenisKelaminSiswa ];
-            let h = 0, i = 0, s = 0, a = 0; const riwayat = dataBulanIni[m.nisn] ? dataBulanIni[m.nisn].catatan : {};
-
-            for(let d = 1; d <= 31; d++) {
-                if(d <= jumlahHari) {
-                    const st = riwayat[d] || '';
-                    if(st === 'Hadir') { barisData.push('H'); h++; } else if(st === 'Izin') { barisData.push('I'); i++; } else if(st === 'Sakit') { barisData.push('S'); s++; } else if(st === 'Alpha') { barisData.push('A'); a++; } else { barisData.push(''); }
-                } else { barisData.push(''); }
-            }
-            barisData.push(h, i, s, a); bodyRows.push(barisData);
-        });
-
-        doc.autoTable({
-            startY: 33, head: [rowHeader1, rowHeader2], body: bodyRows, theme: 'grid',
-            styles: { font: 'times', fontSize: 7.5, cellPadding: 0.8, align: 'center', textColor: [0, 0, 0], lineColor: [140, 140, 140], lineWidth: 0.15, valign: 'middle' },
-            headStyles: { fillColor: [245, 245, 245], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.2, align: 'center' },
-            columnStyles: { 0: { cellWidth: 11, fontStyle: 'bold', align: 'center' }, 1: { cellWidth: 26, align: 'center', fontSize: 6.5 }, 2: { cellWidth: 42, align: 'left' }, 3: { cellWidth: 8, align: 'center' }, 35: { cellWidth: 6.5, fontStyle: 'bold', fillColor: [235, 248, 235], align: 'center' }, 36: { cellWidth: 6.5, fontStyle: 'bold', fillColor: [235, 243, 253], align: 'center' }, 37: { cellWidth: 6.5, fontStyle: 'bold', fillColor: [255, 252, 225], align: 'center' }, 38: { cellWidth: 6.5, fontStyle: 'bold', fillColor: [255, 238, 238], align: 'center' } },
-            didParseCell: function(data) {
-                if (data.section === 'head' && data.row.index === 0) {
-                    if (data.column.index === 0) data.cell.rowSpan = 2; if (data.column.index === 1) data.cell.text = ''; if (data.column.index === 2) data.cell.rowSpan = 2; if (data.column.index === 3) data.cell.rowSpan = 2; if (data.column.index === 4) data.cell.colSpan = 31; if (data.column.index === 35) data.cell.colSpan = 4;
-                }
-                if (data.section === 'head' && data.row.index === 1) { if (data.column.index === 1) data.cell.text = 'NISN / NIS'; }
-            }
-        });
-
-        let finalY = doc.lastAutoTable.finalY + 8; if (finalY > 175) { doc.addPage(); finalY = 20; }
-        doc.setFont("times", "normal"); doc.setFontSize(9.5); doc.setTextColor(0);
-        doc.text(`Keterangan Jumlah Siswa:`, 14, finalY); doc.text(`- Siswa Laki-laki (L) : ${jmlLaki} Anak`, 16, finalY + 5); doc.text(`- Siswa Perempuan (P) : ${jmlPerempuan} Anak`, 16, finalY + 10); doc.setFont("times", "bold"); doc.text(`Total Siswa Keseluruhan : ${jmlLaki + jmlPerempuan} Anak`, 16, finalY + 15);
-
-        doc.setFont("times", "normal"); const hariCetak = String(new Date().getDate()).padStart(2,'0'); const bulanCetak = namaBulanIndo[new Date().getMonth()]; const tahunCetak = new Date().getFullYear();
-        doc.text(`Gunung Malang, ${hariCetak} ${bulanCetak} ${tahunCetak}`, 230, finalY); doc.text(`Mengetahui,`, 230, finalY + 5); doc.text(`Wali Kelas ${kelas.replace(" SD", "")}`, 230, finalY + 10);
-        doc.line(230, finalY + 30, 280, finalY + 30); doc.setFont("times", "bold"); doc.text(namaWali, 230, finalY + 34);
-
-        doc.save(`Laporan_Bulanan_SDN_1_GM_${kelas.replace(/\s+/g, '_')}_${textBulanSaja}.pdf`);
-    }
-
-    // Inisialisasi Pemuatan Komponen saat Dokumen Pertama Kali Terbuka
-    buatDropdownBulanOtomatis(); 
-    perbaruiHeaderTahunWeb();
-    renderTabelMuridAdmin();
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
